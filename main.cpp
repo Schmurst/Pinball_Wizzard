@@ -7,6 +7,8 @@
 // Text overlay
 //
 
+#define OCTET_BULLET 1
+
 #include "../../octet.h"
 
 #include "Pinball_Wizzard.h"
