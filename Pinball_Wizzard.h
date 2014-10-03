@@ -45,7 +45,11 @@ namespace octet {
       // first the materials
       material *box_material = new material(colour);
       // now the box
-      mesh_box *box_mesh = new mesh_box()
+      mesh_box *box_mesh = new mesh_box();
+      mat4t boxLocation;
+      boxLocation.loadIdentity();
+      boxLocation.translate(halfWidth, halfHeight, halfDepth);
+      scene->add_mesh_instance(new mesh_instance(node, box_mesh, box_material));
     }
 
   };
