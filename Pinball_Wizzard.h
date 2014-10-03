@@ -5,7 +5,46 @@
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
 namespace octet {
-  /// Scene using bullet for physics effects.
+  /// Box3D Class implementation used to derive other such objects.
+  class Box3D {
+    mat4t modelToWorld;
+    scene_node *node;
+    float halfWidth;
+    float halfHeight;
+    vec4  colour;
+
+  public:
+
+    Box3D() {
+      node = 0;
+    }
+
+    ~Box3D() {
+      delete node;
+    }
+
+    /// This is called to initialised a box3D in a position with a colour.
+    void init(vec3 box_location, vec4 box_colour, float box_scale) {
+      // First colour the 3D box.
+      colour = box_colour;
+      // now set the half dimentions
+      halfHeight = 1.0f * box_scale;
+      halfWidth = 1.0f * box_scale;
+      // init the matrix to convert local (model) space to world space
+      modelToWorld.loadIdentity();
+      modelToWorld.translate(box_location.x(), box_location.y(), box_location.z());
+      // create a node to hold out box
+      if (node == 0)  node = new scene_node(modelToWorld, atom_);
+      modelToWorld.loadIdentity();
+    }
+
+    /// This function is used after init to load the Box3D inti the relevnt scene
+    void LoadToScene(ref<visual_scene> scene) {
+      material *box_material = new material(colour)
+    }
+
+  };
+  /// Scene using bullet for physics effects. 
   class Pinball_Wizzard : public app {
     // scene for drawing box
     ref<visual_scene> app_scene;
@@ -14,7 +53,7 @@ namespace octet {
     btCollisionDispatcher *dispatcher;            /// handler for collisions between objects
     btDbvtBroadphase *broadphase;                 /// handler for broadphase (rough) collision
     btSequentialImpulseConstraintSolver *solver;  /// handler to resolve collisions
-    btDiscreteDynamicsWorld *world;             /// physics world, contains rigid bodies
+    btDiscreteDynamicsWorld *world;               /// physics world, contains rigid bodies
 
     dynarray<btRigidBody*> rigid_bodies;
     dynarray<scene_node*> nodes;
@@ -45,6 +84,7 @@ namespace octet {
       app_scene->add_child(node);
       app_scene->add_mesh_instance(new mesh_instance(node, box, mat));
     }
+
   public:
     /// this is called when we construct the class before everything is initialised.
     Pinball_Wizzard(int argc, char **argv) : app(argc, argv) {
@@ -61,32 +101,39 @@ namespace octet {
       delete dispatcher;
     }
 
+	/// This is called to move the Flippers.
+	void move_flipper() {
+	  printf("Flipper function has been activated");
+	}
+
     /// this is called once OpenGL is initialized
-    void app_init() {
-      app_scene =  new visual_scene();
-      app_scene->create_default_camera_and_lights();
-      app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 5, 0));
+	void app_init() {
+		app_scene = new visual_scene();
+		app_scene->create_default_camera_and_lights();
+		app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 5, 0));
 
-      mat4t modelToWorld;
-      material *floor_mat = new material(vec4(0, 1, 0, 1));
+		mat4t modelToWorld;
+		material *floor_mat = new material(vec4(0, 1, 1, 1));
 
-      // add the ground (as a static object)
-      add_box(modelToWorld, vec3(200.0f, 0.5f, 200.0f), floor_mat, false);
+		// add the ground (as a static object)
+		add_box(modelToWorld, vec3(200.0f, 0.5f, 200.0f), floor_mat, false);
 
-      // add the boxes (as dynamic objects)
-      modelToWorld.translate(-4.5f, 10.0f, 0);
-      material *mat = new material(vec4(0, 1, 1, 1));
-      for (int i = 0; i != 20; ++i) {
-        modelToWorld.translate(3, 0, 0);
-        modelToWorld.rotateZ(360/20);
-        add_box(modelToWorld, vec3(0.5f), mat);
-      }
+		// add the boxes (as dynamic objects)
+		modelToWorld.translate(-4.5f, 10.0f, 0);
+		material *mat = new material(vec4(0, 1, 1, 1));
+		for (int i = 0; i != 20; ++i) {
+			modelToWorld.translate(3, 0, 0);
+			modelToWorld.rotateZ(360 / 20);
+			add_box(modelToWorld, vec3(0.5f), mat);
+		}
 
-      // comedy box
-      modelToWorld.loadIdentity();
-      modelToWorld.translate(0, 200, 0);
-      add_box(modelToWorld, vec3(5.0f), floor_mat);
-    }
+		// add the flippers
+		modelToWorld.translate(5.0f, -1.0f, 0);
+		material *mat_hitter = new material(vec4(1, 0, 0, 1));
+		add_box(modelToWorld, vec3(2.5f, 0.5f, 0.5f), mat_hitter, false);
+		modelToWorld.translate(-10.0f, 0, 0);
+		add_box(modelToWorld, vec3(2.5f, 0.5f, 0.5f), mat_hitter, false);
+	}
 
     /// this is called to draw the world
     void draw_world(int x, int y, int w, int h) {
@@ -104,6 +151,14 @@ namespace octet {
         modelToWorld[3] = vec4(pos[0], pos[1], pos[2], 1);
         nodes[i]->access_nodeToParent() = modelToWorld;
       }
+
+	  // detect whether flipper should be moved
+	  if (is_key_down('A'))  {
+		  move_flipper();
+	  }
+	  else if (is_key_down('D')) {
+		  move_flipper();
+	  }
 
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
