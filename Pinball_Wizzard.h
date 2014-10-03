@@ -9,8 +9,9 @@ namespace octet {
   class Box3D {
     mat4t modelToWorld;
     scene_node *node;
-    float halfWidth;
-    float halfHeight;
+    float halfWidth;  // x
+    float halfHeight; // y
+    float halfDepth;  // z
     vec4  colour;
 
   public:
@@ -24,12 +25,13 @@ namespace octet {
     }
 
     /// This is called to initialised a box3D in a position with a colour.
-    void init(vec3 box_location, vec4 box_colour, float box_scale) {
+    void init(vec3 box_location, vec4 box_colour, vec3 box_size) {
       // First colour the 3D box.
       colour = box_colour;
       // now set the half dimentions
-      halfHeight = 1.0f * box_scale;
-      halfWidth = 1.0f * box_scale;
+      halfHeight = 0.5f * box_size.y();
+      halfWidth = 0.5f * box_size.x();
+      halfDepth = 0.5f * box_size.z();
       // init the matrix to convert local (model) space to world space
       modelToWorld.loadIdentity();
       modelToWorld.translate(box_location.x(), box_location.y(), box_location.z());
@@ -38,9 +40,12 @@ namespace octet {
       modelToWorld.loadIdentity();
     }
 
-    /// This function is used after init to load the Box3D inti the relevnt scene
+    /// This function is used after init to load the Box3D inti the current scene.
     void LoadToScene(ref<visual_scene> scene) {
-      material *box_material = new material(colour)
+      // first the materials
+      material *box_material = new material(colour);
+      // now the box
+      mesh_box *box_mesh = new mesh_box()
     }
 
   };
