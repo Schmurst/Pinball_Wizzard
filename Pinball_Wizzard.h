@@ -64,6 +64,7 @@ namespace octet {
     vec3 position;
     material *mat;
     bool is_dynamic;
+    btRigidBody *rigidbody;
 
   public:
     Box3D(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true) {
@@ -73,9 +74,19 @@ namespace octet {
       mat = box_material;
       is_dynamic = is_box_dynamic;
       // Get the scale and rotation elements from the model to world matrix
-      btMatrix3x3 matrix(get_btMatrix3x3(modelToWorld));
+      btMatrix3x3 scaleRotMatrix(get_btMatrix3x3(modelToWorld));
       // get and store the translation elements from the model to world matrix
-      btVector3 trans_vec(get_btVector3(modelToWorld[3].xyz()));
+      btVector3 transVec(get_btVector3(modelToWorld[3].xyz()));
+      // create a collision shape out of the size input
+      btCollisionShape *shape = new btBoxShape(get_btVector3(size));
+      // create default motion state, init dynamic elements
+      btTransform transform(scaleRotMatrix, transVec);
+      btDefaultMotionState *motionState = new btDefaultMotionState(transform);
+      btScalar mass = is_box_dynamic ? 1.0f : 0.0f;
+      btVector3 inertialTensor;
+      shape->calculateLocalInertia(mass, inertialTensor);
+      // construct rigidbody
+      rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
 
     }
   };
