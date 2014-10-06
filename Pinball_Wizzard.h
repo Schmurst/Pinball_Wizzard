@@ -5,6 +5,7 @@
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
 namespace octet {
+  /*
   /// Box3D Class implementation used to derive other such objects.
   class Box3D {
     mat4t modelToWorld;
@@ -53,6 +54,32 @@ namespace octet {
     }
 
   };
+  */
+
+  /// Box3D class, simple 3d box class, can be dynamic
+  class Box3D {
+  private:
+    mat4t modelToWorld;
+    vec3 size;
+    vec3 position;
+    material *mat;
+    bool is_dynamic;
+
+  public:
+    Box3D(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true) {
+      // assign private data
+      modelToWorld = model2world;
+      size = box_size;
+      mat = box_material;
+      is_dynamic = is_box_dynamic;
+      // Get the scale and rotation elements from the model to world matrix
+      btMatrix3x3 matrix(get_btMatrix3x3(modelToWorld));
+      // get and store the translation elements from the model to world matrix
+      btVector3 trans_vec(get_btVector3(modelToWorld[3].xyz()));
+
+    }
+  };
+
   /// Scene using bullet for physics effects. 
   class Pinball_Wizzard : public app {
     // scene for drawing box
@@ -69,14 +96,14 @@ namespace octet {
 
     void add_box(mat4t_in modelToWorld, vec3_in size, material *mat, bool is_dynamic=true) {
 
-      btMatrix3x3 matrix(get_btMatrix3x3(modelToWorld));
-      btVector3 pos(get_btVector3(modelToWorld[3].xyz()));
+      btMatrix3x3 matrix(get_btMatrix3x3(modelToWorld));    // creates a new 3x3 matrix from model to world
+      btVector3 pos(get_btVector3(modelToWorld[3].xyz()));  // creates position vector from model to world
 
-      btCollisionShape *shape = new btBoxShape(get_btVector3(size));
+      btCollisionShape *shape = new btBoxShape(get_btVector3(size));  // btcollsionshape out of a bt box
 
-      btTransform transform(matrix, pos);
+      btTransform transform(matrix, pos); // creates a transform matrix
 
-      btDefaultMotionState *motionState = new btDefaultMotionState(transform);
+      btDefaultMotionState *motionState = new btDefaultMotionState(transform);  // to be understood
       btScalar mass = is_dynamic ? 1.0f : 0.0f;
       btVector3 inertiaTensor;
    
@@ -130,11 +157,17 @@ namespace octet {
 		// add the boxes (as dynamic objects)
 		modelToWorld.translate(-4.5f, 10.0f, 0);
 		material *mat = new material(vec4(0, 1, 1, 1));
-		for (int i = 0; i != 20; ++i) {
-			modelToWorld.translate(3, 0, 0);
-			modelToWorld.rotateZ(360 / 20);
-			add_box(modelToWorld, vec3(0.5f), mat);
-		}
+    for (int i = 0; i != 20; ++i) {
+      modelToWorld.translate(3, 0, 0);
+      modelToWorld.rotateZ(360 / 20);
+      add_box(modelToWorld, vec3(0.5f), mat);
+    }
+    /*
+    // add a box3D object
+    Box3D boxee;
+    boxee.init(vec3(0, 0, 0), vec4(1, 0, 0, 1), vec3(1, 1, 1));
+    // boxee.LoadToScene(app_scene);		
+    */
 
 		// add the flippers
 		modelToWorld.translate(5.0f, -1.0f, 0);
@@ -161,13 +194,13 @@ namespace octet {
         nodes[i]->access_nodeToParent() = modelToWorld;
       }
 
-	  // detect whether flipper should be moved
-	  if (is_key_down('A'))  {
-		  move_flipper();
-	  }
-	  else if (is_key_down('D')) {
-		  move_flipper();
-	  }
+	    // detect whether flipper should be moved
+	    if (is_key_down('A'))  {
+		    move_flipper();
+	    }
+	    else if (is_key_down('D')) {
+		    move_flipper();
+	    }
 
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
