@@ -5,63 +5,12 @@
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
 namespace octet {
-  /*
-  /// Box3D Class implementation used to derive other such objects.
-  class Box3D {
-    mat4t modelToWorld;
-    scene_node *node;
-    float halfWidth;  // x
-    float halfHeight; // y
-    float halfDepth;  // z
-    vec4  colour;
-
-  public:
-
-    Box3D() {
-      node = 0;
-    }
-
-    ~Box3D() {
-      delete node;
-    }
-
-    /// This is called to initialised a box3D in a position with a colour.
-    void init(vec3 box_location, vec4 box_colour, vec3 box_size) {
-      // First colour the 3D box.
-      colour = box_colour;
-      // now set the half dimentions
-      halfHeight = 0.5f * box_size.y();
-      halfWidth = 0.5f * box_size.x();
-      halfDepth = 0.5f * box_size.z();
-      // init the matrix to convert local (model) space to world space
-      modelToWorld.loadIdentity();
-      modelToWorld.translate(box_location.x(), box_location.y(), box_location.z());
-      // create a node to hold out box
-      if (node == 0)  node = new scene_node(modelToWorld, atom_);
-      modelToWorld.loadIdentity();
-    }
-
-    /// This function is used after init to load the Box3D inti the current scene.
-    void LoadToScene(ref<visual_scene> scene) {
-      // first the materials
-      material *box_material = new material(colour);
-      // now the box
-      mesh_box *box_mesh = new mesh_box();
-      mat4t boxLocation;
-      boxLocation.loadIdentity();
-      boxLocation.translate(halfWidth, halfHeight, halfDepth);
-      scene->add_mesh_instance(new mesh_instance(node, box_mesh, box_material));
-    }
-
-  };
-  */
 
   /// Box3D class, simple 3d box class, can be dynamic
   class Box3D {
   private:
     mat4t modelToWorld;
     vec3 size;
-    vec3 position;
     material *mat;
     bool is_dynamic;
     btRigidBody *rigidbody;
@@ -73,8 +22,8 @@ namespace octet {
     Box3D()
     {}
 
-    ~Box3D()
-    {}
+    ~Box3D(){
+    }
 
     /// init function
     void init(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true) {
@@ -88,7 +37,7 @@ namespace octet {
       // get and store the translation elements from the model to world matrix
       btVector3 transVec(get_btVector3(modelToWorld[3].xyz()));
       // create a collision shape out of the size input
-      btCollisionShape *shape = new btBoxShape(get_btVector3(size));
+      btCollisionShape *shape = new btBoxShape(get_btVector3(size)); 
       // create default motion state, init dynamic elements
       btTransform transform(scaleRotMatrix, transVec);
       btDefaultMotionState *motionState = new btDefaultMotionState(transform);
@@ -103,12 +52,12 @@ namespace octet {
     }
 
     /// called to add a Box3D to a scene.
-    void Add_to_scene(dynarray<scene_node*> sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld *btWorld, dynarray<btRigidBody*> rigidBodies) {
+    void Add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+      btWorld.addRigidBody(rigidbody);
+      rigidBodies.push_back(rigidbody);
       sceneNodes.push_back(node);
       appScene->add_child(node);
       appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
-      btWorld->addRigidBody(rigidbody);
-      rigidBodies.push_back(rigidbody);
     }
   };
 
@@ -142,8 +91,8 @@ namespace octet {
       shape->calculateLocalInertia(mass, inertiaTensor);
     
       btRigidBody * rigid_body = new btRigidBody(mass, motionState, shape, inertiaTensor);
-      world->addRigidBody(rigid_body);
-      rigid_bodies.push_back(rigid_body);
+      world->addRigidBody(rigid_body);    
+      rigid_bodies.push_back(rigid_body); 
 
       mesh_box *box = new mesh_box(size);
       scene_node *node = new scene_node(modelToWorld, atom_);
@@ -194,20 +143,16 @@ namespace octet {
       modelToWorld.rotateZ(360 / 20);
       add_box(modelToWorld, vec3(0.5f), mat);
     }
+
     // add box3D to the scene
     modelToWorld.loadIdentity();
     modelToWorld.translate(-4.5f, 5.0f, 0);
     material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
     Box3D box;
-    box.init(modelToWorld, vec3(1.0f, 5.0f, 1.0f), box_mat, false);
-    box.Add_to_scene(nodes, app_scene, world, rigid_bodies);
+    box.init(modelToWorld, vec3(6.0f, 0.5f, 1.0f), box_mat, true);
+    box.Add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
-		// add the flippers
-		modelToWorld.translate(5.0f, -1.0f, 0);
-		material *mat_hitter = new material(vec4(1, 0, 0, 1));
-		add_box(modelToWorld, vec3(2.5f, 0.5f, 0.5f), mat_hitter, false);
-		modelToWorld.translate(-10.0f, 0, 0);
-		add_box(modelToWorld, vec3(2.5f, 0.5f, 0.5f), mat_hitter, false);
+    printf("floats: %4.2f \n", rigid_bodies.size());
 	}
 
     /// this is called to draw the world
