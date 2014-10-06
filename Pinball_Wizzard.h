@@ -65,8 +65,11 @@ namespace octet {
     material *mat;
     bool is_dynamic;
     btRigidBody *rigidbody;
+    scene_node *node;
+    mesh_box *meshBox;
 
   public:
+    /// Box3d Constructor, used to initialise a dynamic box.
     Box3D(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true) {
       // assign private data
       modelToWorld = model2world;
@@ -87,6 +90,13 @@ namespace octet {
       shape->calculateLocalInertia(mass, inertialTensor);
       // construct rigidbody
       rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
+      // init mesh_box and scene node
+      meshBox = new mesh_box(size);
+      node = new scene_node(modelToWorld, atom_);
+    }
+
+    /// called to add a Box3D to a scene.
+    void Add_to_scene() {
 
     }
   };
