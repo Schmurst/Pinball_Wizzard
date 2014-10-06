@@ -26,7 +26,7 @@ namespace octet {
     }
 
     /// init function
-    void init(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true) {
+    void init(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true, float box_mass = 1.0f) {
       // assign private data
       modelToWorld = model2world;
       size = box_size;
@@ -41,7 +41,7 @@ namespace octet {
       // create default motion state, init dynamic elements
       btTransform transform(scaleRotMatrix, transVec);
       btDefaultMotionState *motionState = new btDefaultMotionState(transform);
-      btScalar mass = is_box_dynamic ? 1.0f : 0.0f;
+      btScalar mass = box_mass;
       btVector3 inertialTensor;
       shape->calculateLocalInertia(mass, inertialTensor);
       // construct rigidbody
@@ -60,6 +60,7 @@ namespace octet {
       appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
     }
   };
+
   /// Flipper class derived from box to hit phys boxes around the scene
   class Flipper : public Box3D {
   private:
@@ -73,9 +74,9 @@ namespace octet {
     }
 
     /// This is called to initialise the flipper
-    void init_flipper(mat4t model2world, vec3 box_size, material *box_material, vec3 torque) {
+    void init_flipper(mat4t model2world, vec3 box_size, material *box_material, vec3 torque, float mass) {
       flipTorque = get_btVector3(torque);
-      init(model2world, box_size, box_material, true);
+      init(model2world, box_size, box_material, true, mass);
     }
 
     /// Eventually this will rotate the flipper.
@@ -149,7 +150,7 @@ namespace octet {
 	  void app_init() {
 		app_scene = new visual_scene();
 		app_scene->create_default_camera_and_lights();
-		app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 5, 0));
+		app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10, 0));
 
 		mat4t modelToWorld;
 		material *floor_mat = new material(vec4(0, 1, 1, 1));
@@ -177,7 +178,7 @@ namespace octet {
     // Add Flipper to the scene
     modelToWorld.loadIdentity();
     modelToWorld.translate(3.0f, 3.0f, 0);
-    flipper.init_flipper(modelToWorld, vec3(3.0f, 0.5f, 1.5f), box_mat, vec3(300.0f, 300.0f, 300.0f));
+    flipper.init_flipper(modelToWorld, vec3(3.0f, 0.5f, 1.5f), box_mat, vec3(0, 0, 3000.0f), 10.0f);
     flipper.addToScene(nodes, app_scene, (*world), rigid_bodies);
 	}
 
