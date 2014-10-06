@@ -103,10 +103,12 @@ namespace octet {
     }
 
     /// called to add a Box3D to a scene.
-    void Add_to_scene(dynarray<scene_node*> sceneNodes, ref<visual_scene> appScene) {
+    void Add_to_scene(dynarray<scene_node*> sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld *btWorld, dynarray<btRigidBody*> rigidBodies) {
       sceneNodes.push_back(node);
       appScene->add_child(node);
       appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
+      btWorld->addRigidBody(rigidbody);
+      rigidBodies.push_back(rigidbody);
     }
   };
 
@@ -194,10 +196,11 @@ namespace octet {
     }
     // add box3D to the scene
     modelToWorld.loadIdentity();
+    modelToWorld.translate(-4.5f, 5.0f, 0);
     material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
     Box3D box;
-    box.init(modelToWorld, vec3(1.0f, 5.0f, 1.0f), box_mat, true);
-    box.Add_to_scene(nodes, app_scene);
+    box.init(modelToWorld, vec3(1.0f, 5.0f, 1.0f), box_mat, false);
+    box.Add_to_scene(nodes, app_scene, world, rigid_bodies);
 
 		// add the flippers
 		modelToWorld.translate(5.0f, -1.0f, 0);
