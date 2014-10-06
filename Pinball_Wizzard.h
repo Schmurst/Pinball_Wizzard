@@ -75,12 +75,12 @@ namespace octet {
     /// This is called to initialise the flipper
     void init_flipper(mat4t model2world, vec3 box_size, material *box_material, vec3 torque) {
       flipTorque = get_btVector3(torque);
-      init(model2world, box_size, box_material, false);
+      init(model2world, box_size, box_material, true);
     }
 
     /// Eventually this will rotate the flipper.
     void flip(){
-      rigidbody->applyTorqueImpulse(flipTorque);
+      rigidbody->applyTorque(flipTorque);
       printf("Flipper function has been activated");
     }
   };
