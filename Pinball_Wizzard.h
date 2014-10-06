@@ -70,7 +70,14 @@ namespace octet {
 
   public:
     /// Box3d Constructor, used to initialise a dynamic box.
-    Box3D(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true) {
+    Box3D()
+    {}
+
+    ~Box3D()
+    {}
+
+    /// init function
+    void init(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true) {
       // assign private data
       modelToWorld = model2world;
       size = box_size;
@@ -96,8 +103,10 @@ namespace octet {
     }
 
     /// called to add a Box3D to a scene.
-    void Add_to_scene() {
-
+    void Add_to_scene(dynarray<scene_node*> sceneNodes, ref<visual_scene> appScene) {
+      sceneNodes.push_back(node);
+      appScene->add_child(node);
+      appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
     }
   };
 
@@ -183,12 +192,12 @@ namespace octet {
       modelToWorld.rotateZ(360 / 20);
       add_box(modelToWorld, vec3(0.5f), mat);
     }
-    /*
-    // add a box3D object
-    Box3D boxee;
-    boxee.init(vec3(0, 0, 0), vec4(1, 0, 0, 1), vec3(1, 1, 1));
-    // boxee.LoadToScene(app_scene);		
-    */
+    // add box3D to the scene
+    modelToWorld.loadIdentity();
+    material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
+    Box3D box;
+    box.init(modelToWorld, vec3(1.0f, 5.0f, 1.0f), box_mat, true);
+    box.Add_to_scene(nodes, app_scene);
 
 		// add the flippers
 		modelToWorld.translate(5.0f, -1.0f, 0);
