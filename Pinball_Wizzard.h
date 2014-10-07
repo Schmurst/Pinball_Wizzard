@@ -82,7 +82,7 @@ namespace octet {
     /// Eventually this will rotate the flipper.
     void flip(){
       rigidbody->applyTorque(flipTorque);
-      printf("Flipper function has been activated");
+      // printf("Flipper function has been activated");
     }
   };
 
