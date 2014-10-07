@@ -100,6 +100,8 @@ namespace octet {
     dynarray<btRigidBody*> rigid_bodies;
     dynarray<scene_node*> nodes;
 
+    camera_instance *camera = app_scene->get_camera_instance(0);
+
     // flipper instatiate is included here such that it is common to all scopes/ functions below
     Flipper flipper;
 
@@ -197,11 +199,12 @@ namespace octet {
         mat4t modelToWorld = q;
         modelToWorld[3] = vec4(pos[0], pos[1], pos[2], 1);
         nodes[i]->access_nodeToParent() = modelToWorld;
+        
       }
 
-      if (is_key_down('s') || is_key_down('S')) {
+      if (is_key_down(key_space)) {
         flipper.flip();
-      }
+      } 
 
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
