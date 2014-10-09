@@ -100,7 +100,7 @@ namespace octet {
     dynarray<btRigidBody*> rigid_bodies;
     dynarray<scene_node*> nodes;
 
-    camera_instance *camera = app_scene->get_camera_instance(0);
+    // camera_instance *camera = app_scene->get_camera_instance(0);
 
     // flipper instatiate is included here such that it is common to all scopes/ functions below
     Flipper flipper;
@@ -169,7 +169,7 @@ namespace octet {
       add_box(modelToWorld, vec3(0.5f), mat);
     }
 
-    // add box3D to the scene
+    // add box3d to the scene
     modelToWorld.loadIdentity();
     modelToWorld.translate(-4.5f, 5.0f, 0);
     material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
@@ -177,7 +177,7 @@ namespace octet {
     box.init(modelToWorld, vec3(6.0f, 0.5f, 1.0f), box_mat, true);
     box.addToScene(nodes, app_scene, (*world), rigid_bodies);
 
-    // Add Flipper to the scene
+    // add flipper to the scene
     modelToWorld.loadIdentity();
     modelToWorld.translate(3.0f, 3.0f, 0);
     flipper.init_flipper(modelToWorld, vec3(3.0f, 0.5f, 1.5f), box_mat, vec3(0, 0, 3000.0f), 10.0f);
