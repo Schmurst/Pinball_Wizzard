@@ -59,6 +59,22 @@ namespace octet {
       appScene->add_child(node);
       appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
     }
+
+    /// This is called to set a hinge constraints on the rigid body.
+    void SetConstraintHinge(float rotX, float rotY, float rotZ) {
+      rigidbody->setAngularFactor(btVector3(rotX, rotY, rotZ));
+    }
+
+    /// This is called to set spacial constraints on a box
+    void SetSpaceConstraint(float transX, float transY, float transZ) {
+      rigidbody->setLinearFactor(btVector3(transX, transY, transZ));
+    }
+
+    /// This is called return normals
+    btQuaternion get_orientation() {
+      return rigidbody->getOrientation();
+    }
+
   };
 
   /// Flipper class derived from box to hit phys boxes around the scene
@@ -73,13 +89,13 @@ namespace octet {
     ~Flipper() {
     }
 
-    /// This is called to initialise the flipper
+    /// This is called to initialise the flipper.
     void init_flipper(mat4t model2world, vec3 box_size, material *box_material, vec3 torque, float mass) {
       flipTorque = get_btVector3(torque);
       init(model2world, box_size, box_material, true, mass);
     }
 
-    /// Eventually this will rotate the flipper.
+    /// This is called by the player to Rotate the flipper.
     void flip(){
       rigidbody->applyTorque(flipTorque);
       // printf("Flipper function has been activated");
@@ -170,18 +186,29 @@ namespace octet {
     }
 
     // add box3d to the scene
-    modelToWorld.loadIdentity();
-    modelToWorld.translate(-4.5f, 5.0f, 0);
     material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
-    Box3D box;
-    box.init(modelToWorld, vec3(6.0f, 0.5f, 1.0f), box_mat, true);
-    box.addToScene(nodes, app_scene, (*world), rigid_bodies);
+    material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
+    btQuaternion tableNormal;                                        // used to correctly orient the flippers
+    Box3D table;                                                     // table is the base of the pinball table
+    modelToWorld.loadIdentity();
+    modelToWorld.translate(0.0f, 4.0f, 4.0f);
+    modelToWorld.rotateX(-30.0f);
+    table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat, false);
+    table.addToScene(nodes, app_scene, (*world), rigid_bodies);
+    table.SetSpaceConstraint(0, 0, 0);
+    table.SetConstraintHinge(0, 0, 0);
+    tableNormal = table.get_orientation();
 
     // add flipper to the scene
+    float absFlipperTorque = 3000.0f;
+    btVector3 flipperTorqueNormal = tableNormal.getAxis() * absFlipperTorque;
     modelToWorld.loadIdentity();
-    modelToWorld.translate(3.0f, 3.0f, 0);
-    flipper.init_flipper(modelToWorld, vec3(3.0f, 0.5f, 1.5f), box_mat, vec3(0, 0, 3000.0f), 10.0f);
+    modelToWorld.translate(3.0f, 5.0f, 5.0f);
+    modelToWorld.rotateX(60.0f);
+    flipper.init_flipper(modelToWorld, vec3(3.0f, 0.5f, 1.5f), box_mat, vec3(flipperTorqueNormal.x(), flipperTorqueNormal.y(), flipperTorqueNormal.z()), 5.0f);
     flipper.addToScene(nodes, app_scene, (*world), rigid_bodies);
+    flipper.SetConstraintHinge(0, 1.0f, 0);
+    flipper.SetSpaceConstraint(0, 0, 0);
 	}
 
     /// this is called to draw the world
@@ -199,7 +226,6 @@ namespace octet {
         mat4t modelToWorld = q;
         modelToWorld[3] = vec4(pos[0], pos[1], pos[2], 1);
         nodes[i]->access_nodeToParent() = modelToWorld;
-        
       }
 
       if (is_key_down(key_space)) {
@@ -207,9 +233,7 @@ namespace octet {
       } 
 
       // update matrices. assume 30 fps.
-      app_scene->update(1.0f/30);
-
-      // draw the scene
+      app_scene->update(1.0f/30);      // draw the scene
       app_scene->render((float)vx / vy);
     }
   };
