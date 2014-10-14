@@ -247,6 +247,8 @@ namespace octet {
       btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
                                                               btVector3(-5.0f, 1.2f, 4.0f), btVector3(-1.3f, -0.125f, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
+      // hingeFlipperLeft->setMotorTarget(0.0f, 0.333333f);
+
       // add constraints to world
       world->addConstraint(hingeFlipperLeft);
       world->addConstraint(hingeFlipperRight);
@@ -269,6 +271,7 @@ namespace octet {
         nodes[i]->access_nodeToParent() = modelToWorld;
       }
 
+      // Key handlers, when pushed will flip the flippers
       if (is_key_down('z') || is_key_down('Z')) {
         flipperL.flip();
       } 
@@ -276,7 +279,7 @@ namespace octet {
       if (is_key_down('m') || is_key_down('M')) {
         flipperR.flip();
       }
-
+     
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);      // draw the scene
       app_scene->render((float)vx / vy);
