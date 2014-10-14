@@ -93,11 +93,6 @@ namespace octet {
       init(model2world, box_size, box_material, mass);
     }
 
-    /// Now it 
-    void printTransform()  {
-      printf("FLipper transform: %f   %f   %f\n", node->access_nodeToParent().x(), node->access_nodeToParent().y(), node->access_nodeToParent().z());
-    }
-
     /// This is called by the player to Rotate the flipper.
     void flip(){
       rigidbody->applyTorque(flipTorque);
@@ -122,7 +117,7 @@ namespace octet {
     // camera_instance *camera = app_scene->get_camera_instance(0);
 
     // flipper instatiate is included here such that it is common to all scopes/ functions below
-    Flipper flipper;
+    Flipper flipperR, flipperL;
 
     void add_box(mat4t_in modelToWorld, vec3_in size, material *mat, bool is_dynamic=true) {
 
@@ -202,9 +197,9 @@ namespace octet {
       world->setGravity(btVector3(0, -9.81f, 0));
 
       camera_instance *camera = app_scene->get_camera_instance(0);
-      camera->get_node()->rotate(45.0f, vec3(0, 1.0f, 0));
-      camera->get_node()->rotate(-15.0f, vec3(1.0f, 0, 0));
-      camera->get_node()->translate(vec3(24.0f, 0, 0));
+      //camera->get_node()->rotate(45.0f, vec3(0, 1.0f, 0));
+      //camera->get_node()->rotate(-15.0f, vec3(1.0f, 0, 0));
+      //camera->get_node()->translate(vec3(24.0f, 0, 0));
 
 		  mat4t modelToWorld;
 		  material *floor_mat = new material(vec4(0, 1, 1, 1));
@@ -231,18 +226,30 @@ namespace octet {
       table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat);                                             // x:8m y:0.5m z:12m
       table.addToScene(nodes, app_scene, (*world), rigid_bodies);
 
-      // add flipper to the scene
+      // add right flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipper.init_flipper(modelToWorld, vec3(3.0f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 3000.0f, 5.0f);    // x: 1.5m y: 0.25f, z: 0.5m
-      flipper.addToScene(nodes, app_scene, (*world), rigid_bodies);
+      flipperR.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 3000.0f, 5.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipperR.addToScene(nodes, app_scene, (*world), rigid_bodies);
+
+      // add left flipper to the scene
+      modelToWorld.loadIdentity();
+      modelToWorld.translate(-17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
+      modelToWorld.rotateX(-30.0f);
+      flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 5.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipperL.addToScene(nodes, app_scene, (*world), rigid_bodies);
 
       // Add a constraint between flipper and table
-      btHingeConstraint *hingeFlipper = new btHingeConstraint((*table.getRigidBody()), (*flipper.getRigidBody()),
-                                                              btVector3(4.0f, 1.2f, 4.0f), btVector3(1.3f, 0, 0), // this are the hinge offset vectors
+      btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
+                                                              btVector3(5.0f, 1.2f, 4.0f), btVector3(1.3f, -0.125f, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
-      world->addConstraint(hingeFlipper);
+      btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
+                                                              btVector3(-5.0f, 1.2f, 4.0f), btVector3(-1.3f, -0.125f, 0), // this are the hinge offset vectors
+                                                              btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
+      // add constraints to world
+      world->addConstraint(hingeFlipperLeft);
+      world->addConstraint(hingeFlipperRight);
 	}
 
     /// this is called to draw the world
@@ -262,14 +269,17 @@ namespace octet {
         nodes[i]->access_nodeToParent() = modelToWorld;
       }
 
-      if (is_key_down(key_space)) {
-        flipper.flip();
+      if (is_key_down('z') || is_key_down('Z')) {
+        flipperL.flip();
       } 
+
+      if (is_key_down('m') || is_key_down('M')) {
+        flipperR.flip();
+      }
 
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);      // draw the scene
       app_scene->render((float)vx / vy);
-      flipper.printTransform();
     }
   };
 }
