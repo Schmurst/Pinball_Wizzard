@@ -75,6 +75,60 @@ namespace octet {
     }
   };
 
+  /// Sphere class, simple add 3D sphere, can be dynamic
+  class Sphere3D {
+  private:
+    mat4t modelToWorld;
+    float radii;
+    material *mat;
+    bool is_dynamic;
+    btRigidBody *rigidbody;
+    scene_node *node;
+    mesh_sphere *mesh;
+
+  public:
+    /// Box3d Constructor, used to initialise a dynamic box.
+    Sphere3D()
+    {}
+    /// Box3D destructor
+    ~Sphere3D(){
+    }
+
+    /// init function
+    void init(mat4t model2world, float rad, material *box_material, float box_mass = 0.0f) {
+      // assign private data
+      modelToWorld = model2world;
+      radii = rad;
+      mat = box_material;
+      // Get the scale and rotation elements from the model to world matrix
+      btMatrix3x3 scaleRotMatrix(get_btMatrix3x3(modelToWorld));
+      // get and store the translation elements from the model to world matrix
+      btVector3 transVec(get_btVector3(modelToWorld[3].xyz()));
+      // create a collision shape out of the size input
+      btCollisionShape *shape = new btSphereShape(btScalar(radii));
+      // create default motion state, init dynamic elements
+      btTransform transform(scaleRotMatrix, transVec);
+      btDefaultMotionState *motionState = new btDefaultMotionState(transform);
+      btScalar mass = box_mass;
+      btVector3 inertialTensor;
+      shape->calculateLocalInertia(mass, inertialTensor);
+      // construct rigidbody
+      rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
+      // init mesh_box and scene node
+      mesh = new mesh_sphere(vec3(0, 0, 0), radii);
+      node = new scene_node(modelToWorld, atom_);
+    }
+
+    /// called to add a Box3D to a scene.
+    void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+      btWorld.addRigidBody(rigidbody);
+      rigidBodies.push_back(rigidbody);
+      sceneNodes.push_back(node);
+      appScene->add_child(node);
+      appScene->add_mesh_instance(new mesh_instance(node, mesh, mat));
+    }
+  };
+
   /// Flipper class derived from box to hit phys boxes around the scene
   class Flipper : public Box3D {
   private:
@@ -194,7 +248,7 @@ namespace octet {
         add_box(modelToWorld, vec3(0.5f), mat);
       }
 
-      // add box3d to the scene
+      // add table to the scene
       material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
       material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
       Box3D table;                                                     // table is the base of the pinball table
@@ -206,14 +260,14 @@ namespace octet {
 
       // add flipper to the scene
       modelToWorld.loadIdentity();
-      modelToWorld.translate(3.0f, 7.0f, 7.0f);
+      modelToWorld.translate(17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipper.init_flipper(modelToWorld, vec3(3.0f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 5.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipper.init_flipper(modelToWorld, vec3(3.0f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 3000.0f, 5.0f);    // x: 1.5m y: 0.25f, z: 0.5m
       flipper.addToScene(nodes, app_scene, (*world), rigid_bodies);
 
       // Add a constraint between flipper and table
       btHingeConstraint *hingeFlipper = new btHingeConstraint((*table.getRigidBody()), (*flipper.getRigidBody()),
-                                                              btVector3(4.0f, 1.2f, 4.0f), btVector3(1.3f, 0, 0),
+                                                              btVector3(4.0f, 1.2f, 4.0f), btVector3(1.3f, 0, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
       world->addConstraint(hingeFlipper);
 	}
