@@ -60,6 +60,11 @@ namespace octet {
       appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
     }
 
+    /// returns rigidbody
+    btRigidBody* getRigidBody() {
+      return rigidbody;
+    }
+
     /// This is called to set a hinge constraints on the rigid body.
     void SetConstraintHinge(float rotX, float rotY, float rotZ) {
       rigidbody->setAngularFactor(btVector3(rotX, rotY, rotZ));
@@ -69,12 +74,6 @@ namespace octet {
     void SetSpaceConstraint(float transX, float transY, float transZ) {
       rigidbody->setLinearFactor(btVector3(transX, transY, transZ));
     }
-
-    /// This is called return normals
-    btQuaternion get_orientation() {
-      return rigidbody->getOrientation();
-    }
-
   };
 
   /// Flipper class derived from box to hit phys boxes around the scene
@@ -166,49 +165,51 @@ namespace octet {
 
     /// this is called once OpenGL is initialized
 	  void app_init() {
-		app_scene = new visual_scene();
-		app_scene->create_default_camera_and_lights();
-		app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10, 0));
+		  app_scene = new visual_scene();
+		  app_scene->create_default_camera_and_lights();
+		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10, 0));
+      world->setGravity(btVector3(0, -9.81f, 0));
 
-		mat4t modelToWorld;
-		material *floor_mat = new material(vec4(0, 1, 1, 1));
+		  mat4t modelToWorld;
+		  material *floor_mat = new material(vec4(0, 1, 1, 1));
 
-		// add the ground (as a static object)
-		add_box(modelToWorld, vec3(200.0f, 0.5f, 200.0f), floor_mat, false);
+		  // add the ground (as a static object)
+		  add_box(modelToWorld, vec3(200.0f, 0.5f, 200.0f), floor_mat, false);
 
-		// add the boxes (as dynamic objects)
-		modelToWorld.translate(-4.5f, 10.0f, 0);
-		material *mat = new material(vec4(0, 1, 1, 1));
-    for (int i = 0; i != 20; ++i) {
-      modelToWorld.translate(3, 0, 0);
-      modelToWorld.rotateZ(360 / 20);
-      add_box(modelToWorld, vec3(0.5f), mat);
-    }
+		  // add the boxes (as dynamic objects)
+		  modelToWorld.translate(-4.5f, 10.0f, 0);
+		  material *mat = new material(vec4(0, 1, 1, 1));
+      for (int i = 0; i != 20; ++i) {
+        modelToWorld.translate(3, 0, 0);
+        modelToWorld.rotateZ(360 / 20);
+        add_box(modelToWorld, vec3(0.5f), mat);
+      }
 
-    // add box3d to the scene
-    material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
-    material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
-    btQuaternion tableNormal;                                        // used to correctly orient the flippers
-    Box3D table;                                                     // table is the base of the pinball table
-    modelToWorld.loadIdentity();
-    modelToWorld.translate(0.0f, 4.0f, 4.0f);
-    modelToWorld.rotateX(-30.0f);
-    table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat, false);
-    table.addToScene(nodes, app_scene, (*world), rigid_bodies);
-    table.SetSpaceConstraint(0, 0, 0);
-    table.SetConstraintHinge(0, 0, 0);
-    tableNormal = table.get_orientation();
+      // add box3d to the scene
+      material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
+      material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
+      Box3D table;                                                     // table is the base of the pinball table
+      modelToWorld.loadIdentity();
+      modelToWorld.translate(0.0f, 4.0f, 4.0f);
+      modelToWorld.rotateX(-30.0f);
+      table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat, false);
+      table.addToScene(nodes, app_scene, (*world), rigid_bodies);
+      table.SetSpaceConstraint(0, 0, 0);
+      table.SetConstraintHinge(0, 0, 0);
 
-    // add flipper to the scene
-    float absFlipperTorque = 3000.0f;
-    btVector3 flipperTorqueNormal = tableNormal.getAxis() * absFlipperTorque;
-    modelToWorld.loadIdentity();
-    modelToWorld.translate(3.0f, 5.0f, 5.0f);
-    modelToWorld.rotateX(60.0f);
-    flipper.init_flipper(modelToWorld, vec3(3.0f, 0.5f, 1.5f), box_mat, vec3(flipperTorqueNormal.x(), flipperTorqueNormal.y(), flipperTorqueNormal.z()), 5.0f);
-    flipper.addToScene(nodes, app_scene, (*world), rigid_bodies);
-    flipper.SetConstraintHinge(0, 1.0f, 0);
-    flipper.SetSpaceConstraint(0, 0, 0);
+      // add flipper to the scene
+      modelToWorld.loadIdentity();
+      modelToWorld.translate(3.0f, 5.0f, 5.0f);
+      modelToWorld.rotateX(-30.0f);
+      flipper.init_flipper(modelToWorld, vec3(3.0f, 0.5f, 1.5f), box_mat, vec3(0, 0, 1.0f) * 1000.0f, 5.0f);
+      flipper.addToScene(nodes, app_scene, (*world), rigid_bodies);
+      flipper.SetSpaceConstraint(0, 0, 0);
+
+      // Add a constraint between flipper and table
+      btHingeConstraint *hingeFlipper = new btHingeConstraint((*table.getRigidBody()), (*flipper.getRigidBody()),
+                                                              btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f),
+                                                              btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
+      world->addConstraint(hingeFlipper);
 	}
 
     /// this is called to draw the world
