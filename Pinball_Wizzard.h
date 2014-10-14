@@ -75,60 +75,6 @@ namespace octet {
     }
   };
 
-  /// Sphere class, simple add 3D sphere, can be dynamic
-  class Sphere3D {
-  private:
-    mat4t modelToWorld;
-    float radii;
-    material *mat;
-    bool is_dynamic;
-    btRigidBody *rigidbody;
-    scene_node *node;
-    mesh_sphere *mesh;
-
-  public:
-    /// Box3d Constructor, used to initialise a dynamic box.
-    Sphere3D()
-    {}
-    /// Box3D destructor
-    ~Sphere3D(){
-    }
-
-    /// init function
-    void init(mat4t model2world, float rad, material *box_material, float box_mass = 0.0f) {
-      // assign private data
-      modelToWorld = model2world;
-      radii = rad;
-      mat = box_material;
-      // Get the scale and rotation elements from the model to world matrix
-      btMatrix3x3 scaleRotMatrix(get_btMatrix3x3(modelToWorld));
-      // get and store the translation elements from the model to world matrix
-      btVector3 transVec(get_btVector3(modelToWorld[3].xyz()));
-      // create a collision shape out of the size input
-      btCollisionShape *shape = new btSphereShape(btScalar(radii));
-      // create default motion state, init dynamic elements
-      btTransform transform(scaleRotMatrix, transVec);
-      btDefaultMotionState *motionState = new btDefaultMotionState(transform);
-      btScalar mass = box_mass;
-      btVector3 inertialTensor;
-      shape->calculateLocalInertia(mass, inertialTensor);
-      // construct rigidbody
-      rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
-      // init mesh_box and scene node
-      mesh = new mesh_sphere(vec3(0, 0, 0), radii);
-      node = new scene_node(modelToWorld, atom_);
-    }
-
-    /// called to add a Box3D to a scene.
-    void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
-      btWorld.addRigidBody(rigidbody);
-      rigidBodies.push_back(rigidbody);
-      sceneNodes.push_back(node);
-      appScene->add_child(node);
-      appScene->add_mesh_instance(new mesh_instance(node, mesh, mat));
-    }
-  };
-
   /// Flipper class derived from box to hit phys boxes around the scene
   class Flipper : public Box3D {
   private:
@@ -205,6 +151,33 @@ namespace octet {
       app_scene->add_mesh_instance(new mesh_instance(node, box, mat));
     }
 
+    void add_sphere(mat4t_in modelToWorld, float radii, material *mat, bool is_dynamic = true) {
+
+      btMatrix3x3 matrix(get_btMatrix3x3(modelToWorld));    // creates a new 3x3 matrix from model to world
+      btVector3 pos(get_btVector3(modelToWorld[3].xyz()));  // creates position vector from model to world
+
+      btCollisionShape *shape = new btSphereShape(btScalar(radii));
+
+      btTransform transform(matrix, pos); // creates a transform matrix
+
+      btDefaultMotionState *motionState = new btDefaultMotionState(transform);  // to be understood
+      btScalar mass = is_dynamic ? 1.0f : 0.0f;
+      btVector3 inertiaTensor;
+
+      shape->calculateLocalInertia(mass, inertiaTensor);
+
+      btRigidBody * rigid_body = new btRigidBody(mass, motionState, shape, inertiaTensor);
+      world->addRigidBody(rigid_body);
+      rigid_bodies.push_back(rigid_body);
+
+      mesh_sphere *ball = new mesh_sphere(vec3(0, 0, 0), radii);
+      scene_node *node = new scene_node(modelToWorld, atom_);
+      nodes.push_back(node);
+
+      app_scene->add_child(node);
+      app_scene->add_mesh_instance(new mesh_instance(node, ball, mat));
+    }
+
   public:
     /// this is called when we construct the class before everything is initialised.
     Pinball_Wizzard(int argc, char **argv) : app(argc, argv) {
@@ -245,7 +218,7 @@ namespace octet {
       for (int i = 0; i != 20; ++i) {
         modelToWorld.translate(3, 0, 0);
         modelToWorld.rotateZ(360 / 20);
-        add_box(modelToWorld, vec3(0.5f), mat);
+        add_sphere(modelToWorld, 0.5f, mat);
       }
 
       // add table to the scene
