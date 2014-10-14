@@ -26,12 +26,11 @@ namespace octet {
     }
 
     /// init function
-    void init(mat4t model2world, vec3 box_size, material *box_material, bool is_box_dynamic = true, float box_mass = 1.0f) {
+    void init(mat4t model2world, vec3 box_size, material *box_material, float box_mass = 0.0f) {
       // assign private data
       modelToWorld = model2world;
       size = box_size;
       mat = box_material;
-      is_dynamic = is_box_dynamic;
       // Get the scale and rotation elements from the model to world matrix
       btMatrix3x3 scaleRotMatrix(get_btMatrix3x3(modelToWorld));
       // get and store the translation elements from the model to world matrix
@@ -91,7 +90,11 @@ namespace octet {
     /// This is called to initialise the flipper.
     void init_flipper(mat4t model2world, vec3 box_size, material *box_material, vec3 torque, float mass) {
       flipTorque = get_btVector3(torque);
-      init(model2world, box_size, box_material, true, mass);
+      init(model2world, box_size, box_material, mass);
+    }
+
+    void printTransform()  {
+      printf("FLipper transform: %f   %f   %f\n", node->access_nodeToParent().x(), node->access_nodeToParent().y(), node->access_nodeToParent().z());
     }
 
     /// This is called by the player to Rotate the flipper.
@@ -167,8 +170,13 @@ namespace octet {
 	  void app_init() {
 		  app_scene = new visual_scene();
 		  app_scene->create_default_camera_and_lights();
-		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10, 0));
+		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 8.0f, 0));
       world->setGravity(btVector3(0, -9.81f, 0));
+
+      camera_instance *camera = app_scene->get_camera_instance(0);
+      camera->get_node()->rotate(45.0f, vec3(0, 1.0f, 0));
+      camera->get_node()->rotate(-15.0f, vec3(1.0f, 0, 0));
+      camera->get_node()->translate(vec3(24.0f, 0, 0));
 
 		  mat4t modelToWorld;
 		  material *floor_mat = new material(vec4(0, 1, 1, 1));
@@ -192,22 +200,19 @@ namespace octet {
       modelToWorld.loadIdentity();
       modelToWorld.translate(0.0f, 4.0f, 4.0f);
       modelToWorld.rotateX(-30.0f);
-      table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat, false);
+      table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat);                                             // x:8m y:0.5m z:12m
       table.addToScene(nodes, app_scene, (*world), rigid_bodies);
-      table.SetSpaceConstraint(0, 0, 0);
-      table.SetConstraintHinge(0, 0, 0);
 
       // add flipper to the scene
       modelToWorld.loadIdentity();
-      modelToWorld.translate(3.0f, 5.0f, 5.0f);
+      modelToWorld.translate(3.0f, 7.0f, 7.0f);
       modelToWorld.rotateX(-30.0f);
-      flipper.init_flipper(modelToWorld, vec3(3.0f, 0.5f, 1.5f), box_mat, vec3(0, 0, 1.0f) * 1000.0f, 5.0f);
+      flipper.init_flipper(modelToWorld, vec3(3.0f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 5.0f);    // x: 1.5m y: 0.25f, z: 0.5m
       flipper.addToScene(nodes, app_scene, (*world), rigid_bodies);
-      flipper.SetSpaceConstraint(0, 0, 0);
 
       // Add a constraint between flipper and table
       btHingeConstraint *hingeFlipper = new btHingeConstraint((*table.getRigidBody()), (*flipper.getRigidBody()),
-                                                              btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f),
+                                                              btVector3(4.0f, 1.2f, 4.0f), btVector3(1.3f, 0, 0),
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
       world->addConstraint(hingeFlipper);
 	}
@@ -236,6 +241,7 @@ namespace octet {
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);      // draw the scene
       app_scene->render((float)vx / vy);
+      flipper.printTransform();
     }
   };
 }
