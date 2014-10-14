@@ -93,6 +93,7 @@ namespace octet {
       init(model2world, box_size, box_material, mass);
     }
 
+    /// Now it 
     void printTransform()  {
       printf("FLipper transform: %f   %f   %f\n", node->access_nodeToParent().x(), node->access_nodeToParent().y(), node->access_nodeToParent().z());
     }
