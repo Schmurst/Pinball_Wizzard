@@ -14,6 +14,7 @@ namespace octet {
     scene_node *node;
     btScalar mass;
     btMotionState *motionState;
+    btRigidBody *rigidbody;
 
   public:
     /// Empty constructor
@@ -37,6 +38,14 @@ namespace octet {
       // create default motion state, init dynamic elements
       btTransform transform(scaleRotMatrix, transVec);
       motionState = new btDefaultMotionState(transform);
+    }
+
+    /// This function is called to place the meshes and rigidbodies in the
+    void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+      btWorld.addRigidBody(rigidbody);
+      rigidBodies.push_back(rigidbody);
+      sceneNodes.push_back(node);
+      appScene->add_child(node);
     }
   };
 
@@ -103,9 +112,7 @@ namespace octet {
   class Pinball : public Object3D {
   private:
     float radii;
-    material *mat;
-    btRigidBody *rigidbody;
-    scene_node *node;
+    mesh_sphere *meshSphere;
 
   public:
     /// Box3d Constructor, used to initialise a dynamic box.
@@ -116,8 +123,21 @@ namespace octet {
     }
 
     /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene
-    void init(mat4t model2world, float rad, material *sphere_material, float sphere_mass = 1.0f) {
+    void init_sphere(mat4t model2world, float rad, material *sphere_material, float sphere_mass = 1.0f) {
+      init(model2world, sphere_material, sphere_mass);
+      btCollisionShape *shape = new btSphereShape(btScalar(rad));
+      btVector3 inertialTensor;
+      shape->calculateLocalInertia(mass, inertialTensor);
+      rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
+      // init mesh_box and scene node
+      meshSphere = new mesh_sphere(vec3(0), rad);
+      node = new scene_node(modelToWorld, atom_);
+    }
 
+    /// Adds the mesh and rigidbody of the sphere to the scene
+    void add_to_Scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+      addToScene(sceneNodes, appScene, btWorld, rigidBodies);
+      appScene->add_mesh_instance(new mesh_instance(node, meshSphere, mat));
     }
 
     /// Moves Pinball to position within world
