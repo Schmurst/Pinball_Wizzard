@@ -230,15 +230,17 @@ namespace octet {
       modelToWorld.loadIdentity();
       modelToWorld.translate(17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipperR.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 3000.0f, 5.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipperR.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 3000.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
       flipperR.addToScene(nodes, app_scene, (*world), rigid_bodies);
 
       // add left flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(-17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 5.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
       flipperL.addToScene(nodes, app_scene, (*world), rigid_bodies);
+      btRigidBody *flipper = new btRigidBody((*flipperL.getRigidBody()));
+      flipper->setRestitution(btScalar(5.0f));
 
       // Add a constraint between flipper and table
       btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
@@ -260,7 +262,7 @@ namespace octet {
       get_viewport_size(vx, vy);
       app_scene->begin_render(vx, vy);
 
-      world->stepSimulation(1.0f/30);
+      world->stepSimulation(1.0f/60);
       for (unsigned i = 0; i != rigid_bodies.size(); ++i) {
         btRigidBody *rigid_body = rigid_bodies[i];
         btQuaternion btq = rigid_body->getOrientation();
