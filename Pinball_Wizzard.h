@@ -6,6 +6,40 @@
 //
 namespace octet {
 
+  /// Object3D class, a base class from which more advanced shapes are derived
+  class Object3D {
+  protected:
+    mat4t modelToWorld;
+    material *mat;
+    scene_node *node;
+    btScalar mass;
+    btMotionState *motionState;
+
+  public:
+    /// Empty constructor
+    Object3D() {
+    }
+
+    /// Destructor
+    ~Object3D() {
+    }
+
+    /// initialise the Object3D
+    void init(mat4t_in model2World, material *mat_object, btScalar mass_object) {
+      // assign private data
+      modelToWorld = model2World;
+      mat = mat_object;
+      mass = mass_object;
+      // Get the scale and rotation elements from the model to world matrix
+      btMatrix3x3 scaleRotMatrix(get_btMatrix3x3(modelToWorld));
+      // get and store the translation elements from the model to world matrix
+      btVector3 transVec(get_btVector3(modelToWorld[3].xyz()));
+      // create default motion state, init dynamic elements
+      btTransform transform(scaleRotMatrix, transVec);
+      motionState = new btDefaultMotionState(transform);
+    }
+  };
+
   /// Box3D class, simple 3d box class, can be dynamic
   class Box3D {
   protected:
@@ -66,15 +100,12 @@ namespace octet {
   };
 
   /// Pinball class, a simple 3d sphere, dynamic
-  class Pinball {
+  class Pinball : public Object3D {
   private:
-    mat4t modelToWorld;
     float radii;
     material *mat;
     btRigidBody *rigidbody;
     scene_node *node;
-    mesh_sphere *mesh;
-    btScalar mass;
 
   public:
     /// Box3d Constructor, used to initialise a dynamic box.
@@ -86,41 +117,12 @@ namespace octet {
 
     /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene
     void init(mat4t model2world, float rad, material *sphere_material, float sphere_mass = 1.0f) {
-      // assign private data
-      modelToWorld = model2world;
-      radii = rad;
-      mat = sphere_material;
-      mass = btScalar(sphere_mass);
-      // Get the scale and rotation elements from the model to world matrix
-      btMatrix3x3 scaleRotMatrix(get_btMatrix3x3(modelToWorld));
-      // get and store the translation elements from the model to world matrix
-      btVector3 transVec(get_btVector3(modelToWorld[3].xyz()));
-      // create a collision shape out of the size input
-      btCollisionShape *shape = new btSphereShape(btScalar(radii));
-      // create default motion state, init dynamic elements
-      btTransform transform(scaleRotMatrix, transVec);
-      btDefaultMotionState *motionState = new btDefaultMotionState(transform);
-      btVector3 inertialTensor;
-      shape->calculateLocalInertia(mass, inertialTensor);
-      // construct rigidbody
-      rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
-      // init mesh_box and scene node
-      mesh = new mesh_sphere(vec3(0), radii);
-      node = new scene_node(modelToWorld, atom_);
+
     }
 
-    /// called to add a Box3D to a scene.
-    void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
-      btWorld.addRigidBody(rigidbody);
-      rigidBodies.push_back(rigidbody);
-      sceneNodes.push_back(node);
-      appScene->add_child(node);
-      appScene->add_mesh_instance(new mesh_instance(node, mesh, mat));
-    }
-
-    /// returns rigidbody
-    btRigidBody* getRigidBody() {
-      return rigidbody;
+    /// Moves Pinball to position within world
+    void setPosition(vec3 pos) {
+      node->access_nodeToParent().loadIdentity();
     }
   };
 
@@ -165,8 +167,9 @@ namespace octet {
 
     // camera_instance *camera = app_scene->get_camera_instance(0);
 
-    // flipper instatiate is included here such that it is common to all scopes/ functions below
+    // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
     Flipper flipperR, flipperL;
+    Pinball pinball;
 
     void add_box(mat4t_in modelToWorld, vec3_in size, material *mat, bool is_dynamic=true) {
 
@@ -272,7 +275,7 @@ namespace octet {
       modelToWorld.loadIdentity();
       modelToWorld.translate(0.0f, 4.0f, 4.0f);
       modelToWorld.rotateX(-30.0f);
-      table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat);                                             // x:8m y:0.5m z:12m
+      table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat);    // x:8m y:0.5m z:12m
       table.addToScene(nodes, app_scene, (*world), rigid_bodies);
 
       // add right flipper to the scene
@@ -298,11 +301,13 @@ namespace octet {
       btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
                                                               btVector3(-5.0f, 1.2f, 4.0f), btVector3(-1.3f, -0.125f, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
-      // hingeFlipperLeft->setMotorTarget(0.0f, 0.333333f);
-
+    
       // add constraints to world
       world->addConstraint(hingeFlipperLeft);
       world->addConstraint(hingeFlipperRight);
+
+      // Add the pinball to the world
+      material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
 	}
 
     /// this is called to draw the world
@@ -329,6 +334,10 @@ namespace octet {
 
       if (is_key_down('m') || is_key_down('M')) {
         flipperR.flip();
+      }
+
+      if (is_key_down('r') || is_key_down('R')) {
+        pinball.setPosition(vec3(0, 5.0f, 5.0f));
       }
      
       // update matrices. assume 30 fps.
