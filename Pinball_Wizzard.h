@@ -63,15 +63,64 @@ namespace octet {
     btRigidBody* getRigidBody() {
       return rigidbody;
     }
+  };
 
-    /// This is called to set a hinge constraints on the rigid body.
-    void SetConstraintHinge(float rotX, float rotY, float rotZ) {
-      rigidbody->setAngularFactor(btVector3(rotX, rotY, rotZ));
+  /// Pinball class, a simple 3d sphere, dynamic
+  class Pinball {
+  private:
+    mat4t modelToWorld;
+    float radii;
+    material *mat;
+    btRigidBody *rigidbody;
+    scene_node *node;
+    mesh_sphere *mesh;
+    btScalar mass;
+
+  public:
+    /// Box3d Constructor, used to initialise a dynamic box.
+    Pinball()
+    {}
+    /// Box3D destructor
+    ~Pinball(){
     }
 
-    /// This is called to set spacial constraints on a box
-    void SetSpaceConstraint(float transX, float transY, float transZ) {
-      rigidbody->setLinearFactor(btVector3(transX, transY, transZ));
+    /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene
+    void init(mat4t model2world, float rad, material *sphere_material, float sphere_mass = 1.0f) {
+      // assign private data
+      modelToWorld = model2world;
+      radii = rad;
+      mat = sphere_material;
+      mass = btScalar(sphere_mass);
+      // Get the scale and rotation elements from the model to world matrix
+      btMatrix3x3 scaleRotMatrix(get_btMatrix3x3(modelToWorld));
+      // get and store the translation elements from the model to world matrix
+      btVector3 transVec(get_btVector3(modelToWorld[3].xyz()));
+      // create a collision shape out of the size input
+      btCollisionShape *shape = new btSphereShape(btScalar(radii));
+      // create default motion state, init dynamic elements
+      btTransform transform(scaleRotMatrix, transVec);
+      btDefaultMotionState *motionState = new btDefaultMotionState(transform);
+      btVector3 inertialTensor;
+      shape->calculateLocalInertia(mass, inertialTensor);
+      // construct rigidbody
+      rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
+      // init mesh_box and scene node
+      mesh = new mesh_sphere(vec3(0), radii);
+      node = new scene_node(modelToWorld, atom_);
+    }
+
+    /// called to add a Box3D to a scene.
+    void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+      btWorld.addRigidBody(rigidbody);
+      rigidBodies.push_back(rigidbody);
+      sceneNodes.push_back(node);
+      appScene->add_child(node);
+      appScene->add_mesh_instance(new mesh_instance(node, mesh, mat));
+    }
+
+    /// returns rigidbody
+    btRigidBody* getRigidBody() {
+      return rigidbody;
     }
   };
 
@@ -240,7 +289,7 @@ namespace octet {
       flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
       flipperL.addToScene(nodes, app_scene, (*world), rigid_bodies);
       btRigidBody *flipper = new btRigidBody((*flipperL.getRigidBody()));
-      flipper->setRestitution(btScalar(5.0f));
+      flipper->setRestitution(btScalar(5.0f));    // Does this even work? no visible difference to ball speeds
 
       // Add a constraint between flipper and table
       btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
