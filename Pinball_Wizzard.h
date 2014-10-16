@@ -55,14 +55,9 @@ namespace octet {
   };
 
   /// Box3D class, simple 3d box class, can be dynamic
-  class Box3D {
+  class Box3D : Object3D {
   protected:
-    mat4t modelToWorld;
     vec3 size;
-    material *mat;
-    bool is_dynamic;
-    btRigidBody *rigidbody;
-    scene_node *node;
     mesh_box *meshBox;
 
   public:
@@ -73,44 +68,25 @@ namespace octet {
     ~Box3D(){
     }
 
-    /// init function
-    void init(mat4t model2world, vec3 box_size, material *box_material, float box_mass = 0.0f) {
-      // assign private data
-      modelToWorld = model2world;
-      size = box_size;
-      mat = box_material;
-      // Get the scale and rotation elements from the model to world matrix
-      btMatrix3x3 scaleRotMatrix(get_btMatrix3x3(modelToWorld));
-      // get and store the translation elements from the model to world matrix
-      btVector3 transVec(get_btVector3(modelToWorld[3].xyz()));
-      // create a collision shape out of the size input
-      btCollisionShape *shape = new btBoxShape(get_btVector3(size)); 
-      // create default motion state, init dynamic elements
-      btTransform transform(scaleRotMatrix, transVec);
-      btDefaultMotionState *motionState = new btDefaultMotionState(transform);
-      btScalar mass = box_mass;
+    /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene
+    void init_box(mat4t model2world, vec3 size, material *material_box, float mass_box = 1.0f) {
+      init(model2world, material_box, mass_box);
+      btCollisionShape *shape = new btBoxShape(get_btVector3(size));
       btVector3 inertialTensor;
       shape->calculateLocalInertia(mass, inertialTensor);
-      // construct rigidbody
       rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
       // init mesh_box and scene node
       meshBox = new mesh_box(size);
       node = new scene_node(modelToWorld, atom_);
     }
 
-    /// called to add a Box3D to a scene.
-    void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
-      btWorld.addRigidBody(rigidbody);
-      rigidBodies.push_back(rigidbody);
-      sceneNodes.push_back(node);
-      appScene->add_child(node);
+    /// Adds the mesh and rigidbody of the box to the scene
+    void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+      addToScene(sceneNodes, appScene, btWorld, rigidBodies);
       appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
     }
 
-    /// returns rigidbody
-    btRigidBody* getRigidBody() {
-      return rigidbody;
-    }
+    btRigidBody getRigidBody();
   };
 
   /// Pinball class, a simple 3d sphere, dynamic
@@ -120,10 +96,10 @@ namespace octet {
     mesh_sphere *meshSphere;
 
   public:
-    /// Box3d Constructor, used to initialise a dynamic box.
+    /// Pinball Constructor
     Pinball()
     {}
-    /// Box3D destructor
+    /// Pinball Destructor
     ~Pinball(){
     }
 
@@ -140,11 +116,10 @@ namespace octet {
     }
 
     /// Adds the mesh and rigidbody of the sphere to the scene
-    void add_to_Scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+    void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
       addToScene(sceneNodes, appScene, btWorld, rigidBodies);
       appScene->add_mesh_instance(new mesh_instance(node, meshSphere, mat));
     }
-
 
     /// Moves Pinball to position within world
     void setPosition(vec3 pos) {
@@ -167,7 +142,8 @@ namespace octet {
     /// This is called to initialise the flipper.
     void init_flipper(mat4t model2world, vec3 box_size, material *box_material, vec3 torque, float mass) {
       flipTorque = get_btVector3(torque);
-      init(model2world, box_size, box_material, mass);
+      init(model2world, box_material, mass);
+
     }
 
     /// This is called by the player to Rotate the flipper.
@@ -301,22 +277,22 @@ namespace octet {
       modelToWorld.loadIdentity();
       modelToWorld.translate(0.0f, 4.0f, 4.0f);
       modelToWorld.rotateX(-30.0f);
-      table.init(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat);    // x:8m y:0.5m z:12m
-      table.addToScene(nodes, app_scene, (*world), rigid_bodies);
+      table.init_box(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat);    // x:8m y:0.5m z:12m
+      table.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // add right flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
       flipperR.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 3000.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
-      flipperR.addToScene(nodes, app_scene, (*world), rigid_bodies);
+      flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // add left flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(-17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
       flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
-      flipperL.addToScene(nodes, app_scene, (*world), rigid_bodies);
+      flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
       // change resitution of the Left flippers rigid body.
       btRigidBody *flipper = new btRigidBody((*flipperL.getRigidBody()));
       flipper->setRestitution(btScalar(5.0f));    // Does this even work? no visible difference to ball speeds
@@ -338,7 +314,7 @@ namespace octet {
       modelToWorld.loadIdentity();
       modelToWorld.translate(2.0f, 10.0f, 0.0f);
       pinball.init_sphere(modelToWorld, 1.0f, sphere_mat, 3.0f);
-      pinball.add_to_Scene(nodes, app_scene, *world, rigid_bodies);
+      pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
 	}
 
     /// this is called to draw the world
