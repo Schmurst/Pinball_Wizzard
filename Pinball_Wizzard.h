@@ -47,6 +47,11 @@ namespace octet {
       sceneNodes.push_back(node);
       appScene->add_child(node);
     }
+
+    /// returns rigidbody
+    btRigidBody* getRigidBody() {
+      return rigidbody;
+    }
   };
 
   /// Box3D class, simple 3d box class, can be dynamic
@@ -139,6 +144,7 @@ namespace octet {
       addToScene(sceneNodes, appScene, btWorld, rigidBodies);
       appScene->add_mesh_instance(new mesh_instance(node, meshSphere, mat));
     }
+
 
     /// Moves Pinball to position within world
     void setPosition(vec3 pos) {
@@ -311,6 +317,7 @@ namespace octet {
       modelToWorld.rotateX(-30.0f);
       flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
       flipperL.addToScene(nodes, app_scene, (*world), rigid_bodies);
+      // change resitution of the Left flippers rigid body.
       btRigidBody *flipper = new btRigidBody((*flipperL.getRigidBody()));
       flipper->setRestitution(btScalar(5.0f));    // Does this even work? no visible difference to ball speeds
 
@@ -328,6 +335,10 @@ namespace octet {
 
       // Add the pinball to the world
       material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
+      modelToWorld.loadIdentity();
+      modelToWorld.translate(2.0f, 10.0f, 0.0f);
+      pinball.init_sphere(modelToWorld, 1.0f, sphere_mat, 3.0f);
+      pinball.add_to_Scene(nodes, app_scene, *world, rigid_bodies);
 	}
 
     /// this is called to draw the world
