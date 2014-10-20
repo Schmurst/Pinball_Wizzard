@@ -248,23 +248,11 @@ namespace octet {
 		  app_scene = new visual_scene();
 		  app_scene->create_default_camera_and_lights();
 		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 1.0f, -31.5f));
-      world->setGravity(btVector3(0, -9.81f, 0));
+      world->setGravity(btVector3(0, -9.81f * 0.2f, 0));
 
       camera_instance *camera = app_scene->get_camera_instance(0);
 		  mat4t modelToWorld;
 		  material *floor_mat = new material(vec4(0, 1, 1, 1));
-
-		  // add the ground (as a static object)
-		  add_box(modelToWorld, vec3(200.0f, 0.5f, 200.0f), floor_mat, false);
-
-		  // add the boxes (as dynamic objects)
-		  modelToWorld.translate(0, 10.0f, 0);
-		  material *mat = new material(vec4(0, 1, 1, 1));
-      for (int i = 0; i != 20; ++i) {
-        modelToWorld.translate(0.1f, 0, 0);
-        modelToWorld.rotateZ(360 / 20);
-        add_sphere(modelToWorld, 0.03f, mat);
-      }
 
       // add table to the scene
       material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
@@ -277,12 +265,19 @@ namespace octet {
       table.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // FLipper
-      float torqueImpluse = 1.0f;
+      float torqueImpluse = 0.1f;
       float initialOffset = 3.0f;
-      vec3 sizeFlipper = vec3(0.1f, 0.02f, 0.02f);
+      float halfheightFlipper = 0.04f;
+      float halfwidthFlipper = 0.02f;
+      float halflengthFlipper = 0.1f;
       float massFlipper = 5.0f;
-      btVector3 hingeOffsetR = btVector3(0.08f, 0.01f, 0.01f);
-      btVector3 hingeOffsetL = btVector3(-0.08f, 0.01f, 0.01f);
+      float gapRelative = 0.1f; // percentage of flipper length (total not half)
+
+      btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, -halfheightFlipper);
+      btVector3 hingeOffsetL = btVector3(-halflengthFlipper * 0.95f, 0, -halfheightFlipper);
+      btVector3 tableOffsetR = btVector3(halflengthFlipper * 2.2f, 0.12f, 0.8f);
+      btVector3 tableOffsetL = btVector3(-halflengthFlipper * 2.2f, 0.12f, 0.8f);
+      vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 
       // add right flipper to the scene
       modelToWorld.loadIdentity();
@@ -300,14 +295,15 @@ namespace octet {
 
       // Add a constraint between flipper and table
       btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
-                                                              btVector3(0.2f, 0.12f, 0.8f), hingeOffsetR, // this are the hinge offset vectors
+                                                              tableOffsetR, hingeOffsetR,         // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
       btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
-                                                              btVector3(-0.2f, 0.12f, 0.8f), hingeOffsetL, // this are the hinge offset vectors
+                                                              tableOffsetL, hingeOffsetL,       // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
       // set angle limits on the flippers
       hingeFlipperLeft->setLimit(-PI * 0.2f, PI * 0.2f);
       hingeFlipperRight->setLimit(-PI * 0.2f, PI * 0.2f, 0.1f, 0.3f, 0.0f);
+
       // add constraints to world
       world->addConstraint(hingeFlipperLeft);
       world->addConstraint(hingeFlipperRight);
@@ -315,8 +311,8 @@ namespace octet {
       // Add the pinball to the world
       material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
       modelToWorld.loadIdentity();
-      modelToWorld.translate(2.0f, 10.0f, 0.0f);
-      pinball.init_sphere(modelToWorld, 1.0f, sphere_mat, 3.0f);
+      modelToWorld.translate(0.02f, 3.0f, 0.0f);
+      pinball.init_sphere(modelToWorld, 0.1f, sphere_mat, 0.2f);
       pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
 	}
 
