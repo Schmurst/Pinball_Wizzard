@@ -167,65 +167,11 @@ namespace octet {
 
     const float PI = 3.14159265f;
 
-    // camera_instance *camera = app_scene->get_camera_instance(0);
-
     // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
     Flipper flipperR, flipperL;
     Pinball pinball;
-
-    void add_box(mat4t_in modelToWorld, vec3_in size, material *mat, bool is_dynamic=true) {
-
-      btMatrix3x3 matrix(get_btMatrix3x3(modelToWorld));    // creates a new 3x3 matrix from model to world
-      btVector3 pos(get_btVector3(modelToWorld[3].xyz()));  // creates position vector from model to world
-
-      btCollisionShape *shape = new btBoxShape(get_btVector3(size));  // btcollsionshape out of a bt box
-
-      btTransform transform(matrix, pos); // creates a transform matrix
-
-      btDefaultMotionState *motionState = new btDefaultMotionState(transform);  // to be understood
-      btScalar mass = is_dynamic ? 1.0f : 0.0f;
-      btVector3 inertiaTensor;
-   
-      shape->calculateLocalInertia(mass, inertiaTensor);
-    
-      btRigidBody * rigid_body = new btRigidBody(mass, motionState, shape, inertiaTensor);
-      world->addRigidBody(rigid_body);    
-      rigid_bodies.push_back(rigid_body); 
-
-      mesh_box *box = new mesh_box(size);
-      scene_node *node = new scene_node(modelToWorld, atom_);
-      nodes.push_back(node);
-
-      app_scene->add_child(node);
-      app_scene->add_mesh_instance(new mesh_instance(node, box, mat));
-    }
-
-    void add_sphere(mat4t_in modelToWorld, float radii, material *mat, bool is_dynamic = true) {
-
-      btMatrix3x3 matrix(get_btMatrix3x3(modelToWorld));    // creates a new 3x3 matrix from model to world
-      btVector3 pos(get_btVector3(modelToWorld[3].xyz()));  // creates position vector from model to world
-
-      btCollisionShape *shape = new btSphereShape(btScalar(radii));
-
-      btTransform transform(matrix, pos); // creates a transform matrix
-
-      btDefaultMotionState *motionState = new btDefaultMotionState(transform);  // to be understood
-      btScalar mass = is_dynamic ? 1.0f : 0.0f;
-      btVector3 inertiaTensor;
-
-      shape->calculateLocalInertia(mass, inertiaTensor);
-
-      btRigidBody * rigid_body = new btRigidBody(mass, motionState, shape, inertiaTensor);
-      world->addRigidBody(rigid_body);
-      rigid_bodies.push_back(rigid_body);
-
-      mesh_sphere *ball = new mesh_sphere(vec3(0, 0, 0), radii);
-      scene_node *node = new scene_node(modelToWorld, atom_);
-      nodes.push_back(node);
-
-      app_scene->add_child(node);
-      app_scene->add_mesh_instance(new mesh_instance(node, ball, mat));
-    }
+    int flipDelayL = 0, flipDelayR = 0;
+    int flipperCoolDown = 15; // frames between flips
 
   public:
     /// this is called when we construct the class before everything is initialised.
@@ -252,12 +198,12 @@ namespace octet {
 
       camera_instance *camera = app_scene->get_camera_instance(0);
 		  mat4t modelToWorld;
-		  material *floor_mat = new material(vec4(0, 1, 1, 1));
-
-      // add table to the scene
-      material *box_mat = new material(vec4(1.0f, 0, 0, 1.0f));
+		  
+      material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
+      
+         
+      Box3D table;
       material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
-      Box3D table;                                                     // table is the base of the pinball table
       modelToWorld.loadIdentity();
       modelToWorld.translate(0.0f, 1.0f, 1.0f);
       modelToWorld.rotateX(-30.0f);
@@ -265,13 +211,12 @@ namespace octet {
       table.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // FLipper
-      float torqueImpluse = 0.1f;
+      float torqueImpluse = 2.0f;
       float initialOffset = 3.0f;
       float halfheightFlipper = 0.04f;
       float halfwidthFlipper = 0.02f;
-      float halflengthFlipper = 0.1f;
+      float halflengthFlipper = 0.12f;
       float massFlipper = 5.0f;
-      float gapRelative = 0.1f; // percentage of flipper length (total not half)
 
       btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, -halfheightFlipper);
       btVector3 hingeOffsetL = btVector3(-halflengthFlipper * 0.95f, 0, -halfheightFlipper);
@@ -283,14 +228,14 @@ namespace octet {
       modelToWorld.loadIdentity();
       modelToWorld.translate(initialOffset, initialOffset, initialOffset);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipperR.init_flipper(modelToWorld, sizeFlipper, box_mat, vec3(0, 0, -1.0f) * torqueImpluse, massFlipper);    
+      flipperR.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, -1.0f) * torqueImpluse, massFlipper);    
       flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // add left flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(-initialOffset, initialOffset, initialOffset);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f); 
-      flipperL.init_flipper(modelToWorld, sizeFlipper, box_mat, vec3(0, 0, 1.0f) * torqueImpluse, massFlipper); // x: 100 y: 20 z: 20
+      flipperL.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, 1.0f) * torqueImpluse, massFlipper); // x: 100 y: 20 z: 20
       flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // Add a constraint between flipper and table
@@ -302,7 +247,7 @@ namespace octet {
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
       // set angle limits on the flippers
       hingeFlipperLeft->setLimit(-PI * 0.2f, PI * 0.2f);
-      hingeFlipperRight->setLimit(-PI * 0.2f, PI * 0.2f, 0.1f, 0.3f, 0.0f);
+      hingeFlipperRight->setLimit(-PI * 0.2f, PI * 0.2f, 0.0f, 0.8f, 0.5f);
 
       // add constraints to world
       world->addConstraint(hingeFlipperLeft);
@@ -311,14 +256,15 @@ namespace octet {
       // Add the pinball to the world
       material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
       modelToWorld.loadIdentity();
-      modelToWorld.translate(0.02f, 3.0f, 0.0f);
-      pinball.init_sphere(modelToWorld, 0.1f, sphere_mat, 0.2f);
+      modelToWorld.translate(0.06f, 3.0f, 0.0f);
+      pinball.init_sphere(modelToWorld, 0.03f, sphere_mat, 0.01f);
       pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
 	}
 
     /// this is called to draw the world
     void draw_world(int x, int y, int w, int h) {
-      int vx = 0, vy = 0;
+      int vx, vy;
+      vx = vy = 0;
       get_viewport_size(vx, vy);
       app_scene->begin_render(vx, vy);
 
@@ -333,13 +279,24 @@ namespace octet {
         nodes[i]->access_nodeToParent() = modelToWorld;
       }
 
+      // decrement flippers
+      if (flipDelayL > 0) {
+        flipDelayL--;
+      }
+
+      if (flipDelayR > 0) {
+        flipDelayR--;
+      }
+
       // Key handlers, when pushed will flip the flippers
-      if (is_key_down('z') || is_key_down('Z')) {
+      if (is_key_down('Z') && flipDelayR == 0) {
         flipperL.flip();
+        flipDelayR = flipperCoolDown;
       } 
 
-      if (is_key_down('m') || is_key_down('M')) {
+      if (is_key_down('M') && flipDelayL == 0) {
         flipperR.flip();
+        flipDelayL = flipperCoolDown;
       }
 
       // update matrices. assume 30 fps.
