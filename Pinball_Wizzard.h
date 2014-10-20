@@ -141,6 +141,7 @@ namespace octet {
     void init_flipper(mat4t model2world, vec3 box_size, material *box_material, vec3 torque, float mass) {
       flipTorque = get_btVector3(torque);
       init_box(model2world, box_size, box_material, mass);
+      rigidbody->setActivationState(DISABLE_DEACTIVATION);    // disables the deactiveation state
     }
 
     /// This is called by the player to Rotate the flipper.
@@ -278,31 +279,35 @@ namespace octet {
       // FLipper
       float torqueImpluse = 1.0f;
       float initialOffset = 3.0f;
+      vec3 sizeFlipper = vec3(0.1f, 0.02f, 0.02f);
+      float massFlipper = 5.0f;
+      btVector3 hingeOffsetR = btVector3(0.08f, 0.01f, 0.01f);
+      btVector3 hingeOffsetL = btVector3(-0.08f, 0.01f, 0.01f);
 
       // add right flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(initialOffset, initialOffset, initialOffset);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipperR.init_flipper(modelToWorld, vec3(0.1f, 0.02f, 0.02f), box_mat, vec3(0, 0, -1.0f) * torqueImpluse, 10.0f);    
+      flipperR.init_flipper(modelToWorld, sizeFlipper, box_mat, vec3(0, 0, -1.0f) * torqueImpluse, massFlipper);    
       flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // add left flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(-initialOffset, initialOffset, initialOffset);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f); 
-      flipperL.init_flipper(modelToWorld, vec3(0.1f, 0.02f, 0.02f), box_mat, vec3(0, 0, 1.0f) * torqueImpluse, 10.0f); // x: 100 y: 20 z: 20
+      flipperL.init_flipper(modelToWorld, sizeFlipper, box_mat, vec3(0, 0, 1.0f) * torqueImpluse, massFlipper); // x: 100 y: 20 z: 20
       flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // Add a constraint between flipper and table
       btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
-                                                              btVector3(0.2f, 0.12f, 0.8f), btVector3(0.07f, -0.01f, 0), // this are the hinge offset vectors
+                                                              btVector3(0.2f, 0.12f, 0.8f), hingeOffsetR, // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
       btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
-                                                              btVector3(-0.2f, 0.12f, 0.8f), btVector3(-0.07f, -0.01f, 0), // this are the hinge offset vectors
+                                                              btVector3(-0.2f, 0.12f, 0.8f), hingeOffsetL, // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
       // set angle limits on the flippers
       hingeFlipperLeft->setLimit(-PI * 0.2f, PI * 0.2f);
-      hingeFlipperRight->setLimit(-PI * 0.2f, PI * 0.2f);
+      hingeFlipperRight->setLimit(-PI * 0.2f, PI * 0.2f, 0.1f, 0.3f, 0.0f);
       // add constraints to world
       world->addConstraint(hingeFlipperLeft);
       world->addConstraint(hingeFlipperRight);
