@@ -164,6 +164,8 @@ namespace octet {
     dynarray<btRigidBody*> rigid_bodies;
     dynarray<scene_node*> nodes;
 
+    const float PI = 3.14159265f;
+
     // camera_instance *camera = app_scene->get_camera_instance(0);
 
     // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
@@ -277,28 +279,28 @@ namespace octet {
       modelToWorld.loadIdentity();
       modelToWorld.translate(17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipperR.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 3000.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipperR.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 300.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
       flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // add left flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(-17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 3000.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 300.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
       flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
       // change resitution of the Left flippers rigid body.
       btRigidBody *flipper = new btRigidBody((*flipperL.getRigidBody()));
       flipper->setRestitution(btScalar(5.0f));    // Does this even work? no visible difference to ball speeds
 
       // Add a constraint between flipper and table
-      btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
+      btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
                                                               btVector3(5.0f, 1.2f, 4.0f), btVector3(1.3f, -0.125f, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
-      btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
+      btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
                                                               btVector3(-5.0f, 1.2f, 4.0f), btVector3(-1.3f, -0.125f, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
-      hingeFlipperLeft->setLimit(-30.0f, 30.0f);
-
+      hingeFlipperLeft->setLimit(-PI * 0.2f, PI * 0.2f);
+      hingeFlipperRight->setLimit(-PI * 0.2f, PI * 0.2f);
       // add constraints to world
       world->addConstraint(hingeFlipperLeft);
       world->addConstraint(hingeFlipperRight);
