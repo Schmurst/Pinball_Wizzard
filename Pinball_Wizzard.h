@@ -55,7 +55,7 @@ namespace octet {
   };
 
   /// Box3D class, simple 3d box class, can be dynamic
-  class Box3D : Object3D {
+  class Box3D : public Object3D {
   protected:
     vec3 size;
     mesh_box *meshBox;
@@ -85,8 +85,6 @@ namespace octet {
       addToScene(sceneNodes, appScene, btWorld, rigidBodies);
       appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
     }
-
-    btRigidBody getRigidBody();
   };
 
   /// Pinball class, a simple 3d sphere, dynamic
@@ -142,13 +140,12 @@ namespace octet {
     /// This is called to initialise the flipper.
     void init_flipper(mat4t model2world, vec3 box_size, material *box_material, vec3 torque, float mass) {
       flipTorque = get_btVector3(torque);
-      init(model2world, box_material, mass);
-
+      init_box(model2world, box_size, box_material, mass);
     }
 
     /// This is called by the player to Rotate the flipper.
     void flip(){
-      rigidbody->applyTorque(flipTorque);
+      rigidbody->applyTorqueImpulse(flipTorque);
       // printf("Flipper function has been activated");
     }
   };
@@ -251,10 +248,6 @@ namespace octet {
       world->setGravity(btVector3(0, -9.81f, 0));
 
       camera_instance *camera = app_scene->get_camera_instance(0);
-      //camera->get_node()->rotate(45.0f, vec3(0, 1.0f, 0));
-      //camera->get_node()->rotate(-15.0f, vec3(1.0f, 0, 0));
-      //camera->get_node()->translate(vec3(24.0f, 0, 0));
-
 		  mat4t modelToWorld;
 		  material *floor_mat = new material(vec4(0, 1, 1, 1));
 
@@ -277,7 +270,7 @@ namespace octet {
       modelToWorld.loadIdentity();
       modelToWorld.translate(0.0f, 4.0f, 4.0f);
       modelToWorld.rotateX(-30.0f);
-      table.init_box(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat);    // x:8m y:0.5m z:12m
+      table.init_box(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat, 0.0f);    // x:8m y:0.5m z:12m mass = 0 -> static
       table.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // add right flipper to the scene
@@ -304,7 +297,8 @@ namespace octet {
       btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
                                                               btVector3(-5.0f, 1.2f, 4.0f), btVector3(-1.3f, -0.125f, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
-    
+      hingeFlipperLeft->setLimit(-30.0f, 30.0f);
+
       // add constraints to world
       world->addConstraint(hingeFlipperLeft);
       world->addConstraint(hingeFlipperRight);
