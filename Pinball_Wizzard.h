@@ -246,7 +246,7 @@ namespace octet {
 	  void app_init() {
 		  app_scene = new visual_scene();
 		  app_scene->create_default_camera_and_lights();
-		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 8.0f, 0));
+		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 1.0f, -3.0f));
       world->setGravity(btVector3(0, -9.81f, 0));
 
       camera_instance *camera = app_scene->get_camera_instance(0);
@@ -262,7 +262,7 @@ namespace octet {
       for (int i = 0; i != 20; ++i) {
         modelToWorld.translate(3, 0, 0);
         modelToWorld.rotateZ(360 / 20);
-        add_sphere(modelToWorld, 0.5f, mat);
+        add_sphere(modelToWorld, 0.01f, mat);
       }
 
       // add table to the scene
@@ -270,23 +270,23 @@ namespace octet {
       material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
       Box3D table;                                                     // table is the base of the pinball table
       modelToWorld.loadIdentity();
-      modelToWorld.translate(0.0f, 4.0f, 4.0f);
+      modelToWorld.translate(0.0f, 1.0f, 0.5f);
       modelToWorld.rotateX(-30.0f);
-      table.init_box(modelToWorld, vec3(8.0f, 0.5f, 12.0f), table_mat, 0.0f);    // x:8m y:0.5m z:12m mass = 0 -> static
+      table.init_box(modelToWorld, vec3(1.0f, 0.1f, 2.0f), table_mat, 0.0f);    // mass = 0 -> static
       table.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // add right flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipperR.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, -1.0f) * 300.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipperR.init_flipper(modelToWorld, vec3(0.1f, 0.02f, 0.05f), box_mat, vec3(0, 0, -1.0f) * 300.0f, 10.0f);    
       flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
       // add left flipper to the scene
       modelToWorld.loadIdentity();
       modelToWorld.translate(-17.0f, 17.0f, 17.0f);  // to make the flipper fly in from off the screen
       modelToWorld.rotateX(-30.0f);
-      flipperL.init_flipper(modelToWorld, vec3(2.5f, 0.25f, 0.5f), box_mat, vec3(0, 0, 1.0f) * 300.0f, 10.0f);    // x: 1.5m y: 0.25f, z: 0.5m
+      flipperL.init_flipper(modelToWorld, vec3(0.1f, 0.02f, 0.05f), box_mat, vec3(0, 0, 1.0f) * 300.0f, 10.0f);
       flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
       // change resitution of the Left flippers rigid body.
       btRigidBody *flipper = new btRigidBody((*flipperL.getRigidBody()));
@@ -294,11 +294,12 @@ namespace octet {
 
       // Add a constraint between flipper and table
       btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
-                                                              btVector3(5.0f, 1.2f, 4.0f), btVector3(1.3f, -0.125f, 0), // this are the hinge offset vectors
+                                                              btVector3(0.101f, 0.05f, 0.8f), btVector3(0.045f, -0.001f, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
       btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
-                                                              btVector3(-5.0f, 1.2f, 4.0f), btVector3(-1.3f, -0.125f, 0), // this are the hinge offset vectors
+                                                              btVector3(-0.101f, 0.05f, 0.8f), btVector3(-0.045f, -0.001f, 0), // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
+      // set angle limits on the flippers
       hingeFlipperLeft->setLimit(-PI * 0.2f, PI * 0.2f);
       hingeFlipperRight->setLimit(-PI * 0.2f, PI * 0.2f);
       // add constraints to world
@@ -339,10 +340,6 @@ namespace octet {
         flipperR.flip();
       }
 
-      if (is_key_down('r') || is_key_down('R')) {
-        pinball.setPosition(vec3(0, 5.0f, 5.0f));
-      }
-     
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);      // draw the scene
       app_scene->render((float)vx / vy);
