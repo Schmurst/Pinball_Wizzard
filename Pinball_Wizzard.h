@@ -5,8 +5,6 @@
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
 namespace octet {
-  // derive Object3D from ref
-
 
   /// Object3D class, a base class from which more advanced shapes are derived
   class Object3D {
@@ -43,7 +41,7 @@ namespace octet {
     }
 
     /// This function is called to place the meshes and rigidbodies in the
-    void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+    void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
       btWorld.addRigidBody(rigidbody);
       rigidBodies.push_back(rigidbody);
       sceneNodes.push_back(node);
@@ -60,7 +58,7 @@ namespace octet {
   class Box3D : public Object3D {
   protected:
     vec3 size;
-    mesh_box *meshBox;
+    mesh_box* meshBox;
 
   public:
     /// Box3d Constructor, used to initialise a dynamic box.
@@ -87,6 +85,28 @@ namespace octet {
       addToScene(sceneNodes, appScene, btWorld, rigidBodies);
       appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
     }
+  };
+
+  /// triangular prism class, derived from simple Object3D class
+  class TriPrism3D : public Object3D {
+  protected:
+    float base;
+    float height;
+    float depth;
+    float angle;
+    mesh_points* mesh;
+
+  public:
+    /// triprism constructor
+    TriPrism3D() {
+      }
+
+    /// triprism destructor
+    ~TriPrism3D() {
+    }
+
+
+
   };
 
   /// Pinball class, a simple 3d sphere, dynamic
