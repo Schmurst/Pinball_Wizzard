@@ -5,6 +5,8 @@
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
 namespace octet {
+  // derive Object3D from ref
+
 
   /// Object3D class, a base class from which more advanced shapes are derived
   class Object3D {
@@ -193,35 +195,58 @@ namespace octet {
 	  void app_init() {
 		  app_scene = new visual_scene();
 		  app_scene->create_default_camera_and_lights();
-		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 1.0f, -31.5f));
-      world->setGravity(btVector3(0, -9.81f * 0.2f, 0));
+		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 1.0f, -5.5f));
+      world->setGravity(btVector3(0, -9.81f, 0));
+
+      scene_node *light_node = new scene_node();
+      light *light_fill = new light();
+      light_fill->set_color(vec4(0.0f, 0.0f, 1.0f, 1.0f));
+      light_fill->set_attenuation(1, 0, -1);
+      light_node->rotate(-45, vec3(1, 0, 0));
+      light_node->translate(vec3(20, 0, 20));
+      app_scene->add_light_instance(new light_instance(light_node, light_fill));
 
       camera_instance *camera = app_scene->get_camera_instance(0);
-		  mat4t modelToWorld;
-		  
-      material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
-      
-         
-      Box3D table;
+		  mat4t modelToWorld; 
       material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
+
+      // Table Construction
+      Box3D table, tableTop, tableR, tableL;
+      float tableWidth = 5.0f;
+      float tableDepth = 0.5f; // used
+      float tableLength = 10.0f;
+      material *table_buffer = new material(vec4(0.1f, 0.8f, 0.1f, 1.0f));
+
+      // Table base
       modelToWorld.loadIdentity();
       modelToWorld.translate(0.0f, 1.0f, 1.0f);
       modelToWorld.rotateX(-30.0f);
-      table.init_box(modelToWorld, vec3(1.0f, 0.1f, 2.0f), table_mat, 0.0f);    // mass = 0 -> static x: 1000 y: 100 z: 2000
+      table.init_box(modelToWorld, vec3(tableWidth, tableDepth, tableLength), table_mat, 0.0f);    // mass = 0 -> static x: 1000 y: 100 z: 2000
       table.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
 
+      // Table Left
+      modelToWorld.translate(-tableWidth - tableDepth, tableDepth, 0);
+      tableL.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2.0f, tableLength * 1.05f), table_buffer, 0.0f);
+      tableL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
+
+      //table Right
+      modelToWorld.translate(tableWidth * 2.0f + tableDepth * 2.0f, 0, 0);
+      tableR.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2.0f, tableLength * 1.05f), table_buffer, 0.0f);
+      tableR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
+
       // FLipper
-      float torqueImpluse = 2.0f;
-      float initialOffset = 3.0f;
-      float halfheightFlipper = 0.04f;
-      float halfwidthFlipper = 0.02f;
-      float halflengthFlipper = 0.12f;
-      float massFlipper = 5.0f;
+      float torqueImpluse = 300.0f;
+      float initialOffset = 10.0f;
+      float halfheightFlipper = 0.2f;
+      float halfwidthFlipper = 0.2f;
+      float halflengthFlipper = 1.2f;
+      float massFlipper = 8.0f;
+      material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
       btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, -halfheightFlipper);
       btVector3 hingeOffsetL = btVector3(-halflengthFlipper * 0.95f, 0, -halfheightFlipper);
-      btVector3 tableOffsetR = btVector3(halflengthFlipper * 2.2f, 0.12f, 0.8f);
-      btVector3 tableOffsetL = btVector3(-halflengthFlipper * 2.2f, 0.12f, 0.8f);
+      btVector3 tableOffsetR = btVector3(halflengthFlipper * 2.2f, 0.5f, 8.0f);
+      btVector3 tableOffsetL = btVector3(-halflengthFlipper * 2.2f, 0.5f, 8.0f);
       vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 
       // add right flipper to the scene
@@ -245,6 +270,8 @@ namespace octet {
       btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
                                                               tableOffsetL, hingeOffsetL,       // this are the hinge offset vectors
                                                               btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
+      // btGeneric6DofConstraint *ConstraintTableL = new btGeneric6DofConstraint()
+
       // set angle limits on the flippers
       hingeFlipperLeft->setLimit(-PI * 0.2f, PI * 0.2f);
       hingeFlipperRight->setLimit(-PI * 0.2f, PI * 0.2f, 0.0f, 0.8f, 0.5f);
@@ -256,8 +283,8 @@ namespace octet {
       // Add the pinball to the world
       material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
       modelToWorld.loadIdentity();
-      modelToWorld.translate(0.06f, 3.0f, 0.0f);
-      pinball.init_sphere(modelToWorld, 0.03f, sphere_mat, 0.01f);
+      modelToWorld.translate(1.0f, 6.0f, 0.0f);
+      pinball.init_sphere(modelToWorld, 0.2f, sphere_mat, 1.0f);
       pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
 	}
 
