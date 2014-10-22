@@ -87,28 +87,6 @@ namespace octet {
     }
   };
 
-  /// triangular prism class, derived from simple Object3D class
-  class TriPrism3D : public Object3D {
-  protected:
-    float base;
-    float height;
-    float depth;
-    float angle;
-    mesh_points* mesh;
-
-  public:
-    /// triprism constructor
-    TriPrism3D() {
-      }
-
-    /// triprism destructor
-    ~TriPrism3D() {
-    }
-
-
-
-  };
-
   /// Pinball class, a simple 3d sphere, dynamic
   class Pinball : public Object3D {
   private:
@@ -230,7 +208,6 @@ namespace octet {
       dynarray<resource*> collada_meshes;
       dict.find_all(collada_meshes, atom_mesh);
       printf("collada_meshes size: %i\n", collada_meshes.size());
-
 
       // stand in material for table
       material *temp_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
