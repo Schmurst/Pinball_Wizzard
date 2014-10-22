@@ -59,21 +59,33 @@ namespace octet {
         app_scene->get_camera_instance(0)->get_node()->rotate(-20.0f, vec3(1.0, 0, 0));
         app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -8.5f));
         world->setGravity(btVector3(0, -9.81f, 0));
+        mat4t modelToWorld;
 
-        // Import collada from file.
+        // Add a a fill light to the scene and create camera instance
+        scene_node *light_node = new scene_node();
+        light *light_fill = new light();
+        light_fill->set_color(vec4(0.0f, 0.0f, 1.0f, 1.0f));
+        light_fill->set_attenuation(1, 0, -1);
+        light_node->rotate(-45, vec3(1, 0, 0));
+        light_node->translate(vec3(20, 0, 20));
+        app_scene->add_light_instance(new light_instance(light_node, light_fill));
+
+        ////////////////////////////////////////////////// Collada import ///////////////////////////////////////////
+        // create dictionary & collada builder
         resource_dict dict;
         collada_builder colladaBuilder;
-        if (!colladaBuilder.load_xml("assets/PinballTable.dae")) {
+        if (!colladaBuilder.load_xml("assets/PinballWizzardAssets.dae")) {
           printf("failed to load the pinball table file");
           return;
         }
+
         // get meshes and their respective nodes from dictionary
         colladaBuilder.get_resources(dict);
         dynarray<resource*> collada_meshes;
         dict.find_all(collada_meshes, atom_mesh);
         printf("collada_meshes size: %i\n", collada_meshes.size());
 
-        // stand in material for table
+        // temporary material for table
         material *temp_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
 
         // put the meshes and nodes in the scene... hopefully
@@ -85,22 +97,9 @@ namespace octet {
           app_scene->add_mesh_instance(new mesh_instance(table_node, table_mesh, temp_mat));
         }
 
-        // Add a a fill light to the scene
-        scene_node *light_node = new scene_node();
-        light *light_fill = new light();
-        light_fill->set_color(vec4(0.0f, 0.0f, 1.0f, 1.0f));
-        light_fill->set_attenuation(1, 0, -1);
-        light_node->rotate(-45, vec3(1, 0, 0));
-        light_node->translate(vec3(20, 0, 20));
-        app_scene->add_light_instance(new light_instance(light_node, light_fill));
-
-        camera_instance *camera = app_scene->get_camera_instance(0);
-        mat4t modelToWorld;
-
         ////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////
-
         bool is_visible = true; // 1.0: visible for debug, 0.0f: invisible
-        Box3D table, BarrierTop, BarrierL, BarrierR, BarrierBot;
+        Box3D table, BarrierTop, BarrierL, BarrierR;
         float tableWidth = 4.95f;
         float tableDepth = 0.5f;
         float tableLength = 10.0f;
@@ -129,16 +128,11 @@ namespace octet {
         BarrierR.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
         BarrierR.getRigidBody()->setRestitution(barrierRestitution);
 
-        // Barrier bottom
-        BarrierBot.init_box(mat4t(), vec3(tableWidth, tableDepth, tableDepth), barrier_mat, 0.0f);
-        BarrierBot.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
-        BarrierBot.getRigidBody()->setRestitution(barrierRestitution);
-
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
         float torqueImpluse = 300.0f;
         float initialOffset = 10.0f;
-        float halfheightFlipper = 0.2f;
-        float halfwidthFlipper = 0.2f;
+        float halfheightFlipper = 0.4f;
+        float halfwidthFlipper = 0.1f;
         float halflengthFlipper = 1.2f;
         float massFlipper = 8.0f;
         float flipperRestitution = 0.8f;
@@ -188,7 +182,7 @@ namespace octet {
         float pinballRestitution = 1.0f;
         modelToWorld.loadIdentity();
         modelToWorld.translate(1.0f, 6.0f, 0.0f);
-        pinball.init_sphere(modelToWorld, 0.2f, sphere_mat, 1.0f);
+        pinball.init_sphere(modelToWorld, 0.4f, sphere_mat, 1.0f);
         pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
         pinball.getRigidBody()->setRestitution(pinballRestitution);
       }
