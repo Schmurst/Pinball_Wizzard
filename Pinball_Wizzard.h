@@ -193,13 +193,14 @@ namespace octet {
 	  void app_init() {
 		  app_scene = new visual_scene();
 		  app_scene->create_default_camera_and_lights();
-		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 1.0f, -5.5f));
+      app_scene->get_camera_instance(0)->get_node()->rotate(-20.0f, vec3(1.0, 0, 0));
+		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -8.5f));
       world->setGravity(btVector3(0, -9.81f, 0));
 
       // Import collada from file.
       resource_dict dict;
       collada_builder colladaBuilder;
-      if (!colladaBuilder.load_xml("assets/TableGame.dae")) {
+      if (!colladaBuilder.load_xml("assets/PinballTable.dae")) {
         printf("failed to load the pinball table file");
         return;
       }
@@ -215,8 +216,9 @@ namespace octet {
       // put the meshes and nodes in the scene... hopefully
       for (int i = 0; i < collada_meshes.size(); i++) {
         mesh *table_mesh = collada_meshes[i]->get_mesh();
-        scene_node *table_node = new scene_node();
-        table_node->translate(vec3(0, 2.0f, -4.5f));
+        scene_node *table_node = dict.get_scene_node("TableNode");
+        table_node->rotate(30.0f, vec3(1.0f, 0, 0));
+        table_node->translate(vec3(0, 2.0f, 0));
         app_scene->add_child(table_node);
         app_scene->add_mesh_instance(new mesh_instance(table_node, table_mesh, temp_mat));
       }
@@ -232,7 +234,6 @@ namespace octet {
 
       camera_instance *camera = app_scene->get_camera_instance(0);
 		  mat4t modelToWorld; 
-      material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
 
       // Table Construction
       Box3D table, tableTop, tableR, tableL;
@@ -240,6 +241,7 @@ namespace octet {
       float tableDepth = 0.5f; // used
       float tableLength = 10.0f;
       material *table_buffer = new material(vec4(0.1f, 0.8f, 0.1f, 1.0f));
+      material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
 
       // Table base
       modelToWorld.loadIdentity();
