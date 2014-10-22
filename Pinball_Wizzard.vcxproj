@@ -216,6 +216,7 @@
     <ClInclude Include="..\..\shaders\shaders.h" />
     <ClInclude Include="..\..\shaders\texture_shader.h" />
     <ClInclude Include="Box3D.h" />
+    <ClInclude Include="Flipper.h" />
     <ClInclude Include="mesh_tri_prism.h" />
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="Pinball.h" />
