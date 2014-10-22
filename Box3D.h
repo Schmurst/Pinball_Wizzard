@@ -22,6 +22,19 @@ namespace octet {
       /// Box3d Constructor, used to initialise a dynamic box.
       Box3D()
       {}
+
+      /// Box3D constructor, using modeltoWorld
+      Box3D(mat4t model2world, vec3 size, material *material_box, float mass_box = 1.0f) {
+        init_box(model2world, size, material_box, mass_box);
+      }
+
+      /// Box3D constructor, takes node
+      Box3D(scene_node *node, vec3 half_extents, material *material, float mass_box = 1.0f) {
+        // assign private data
+        modelToWorld = node->access_nodeToParent();
+        init_box(modelToWorld, half_extents, material, mass_box);
+      }
+
       /// Box3D destructor
       ~Box3D(){
       }

@@ -9,7 +9,6 @@
 #include "Box3D.h"
 #include "Pinball.h"
 #include "Flipper.h"
-#include "Table.h"
 
 namespace octet {
   namespace pinball {
@@ -73,6 +72,7 @@ namespace octet {
         ////////////////////////////////////////////////// Collada import ///////////////////////////////////////////
         // create dictionary & collada builder
         resource_dict dict;
+        dynarray<resource*> collada_meshes;
         collada_builder colladaBuilder;
         if (!colladaBuilder.load_xml("assets/PinballWizzardAssets.dae")) {
           printf("failed to load the pinball table file");
@@ -81,24 +81,41 @@ namespace octet {
 
         // get meshes and their respective nodes from dictionary
         colladaBuilder.get_resources(dict);
-        dynarray<resource*> collada_meshes;
         dict.find_all(collada_meshes, atom_mesh);
         printf("collada_meshes size: %i\n", collada_meshes.size());
+
+        // part list, taken from collada file, very important to keep uptodate
+        dynarray <string> table_parts;
+        table_parts.push_back("Table");
+        table_parts.push_back("BarrierLeft");
+        table_parts.push_back("BarrierRight");
 
         // temporary material for table
         material *temp_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
 
         // put the meshes and nodes in the scene... hopefully
-        for (unsigned int i = 0; i < collada_meshes.size(); i++) {
-          mesh *table_mesh = collada_meshes[i]->get_mesh();
-          scene_node *table_node = dict.get_scene_node("TableNode");
-          table_node->rotate(30.0f, vec3(1.0f, 0, 0));
-          app_scene->add_child(table_node);
-          app_scene->add_mesh_instance(new mesh_instance(table_node, table_mesh, temp_mat));
+        scene_node *node_part;
+        mesh *mesh_part;
+        dynarray <Box3D*> table_boxes;
+        for (unsigned int i = 0; i < table_parts.size(); ++i) {
+          // get the node and mesh of each object in table parts list
+          node_part = dict.get_scene_node(table_parts[i]);
+          table_parts[i] += "-mesh";
+          mesh_part = dict.get_mesh(table_parts[i]);
+          // create axis_aligned bounding box
+          aabb aabb_part = mesh_part->get_aabb();
+          // initialise bt box shape, using centre + halfextents (absolute to avoid stange errors)
+          vec3 size = (aabb_part.get_center() + aabb_part.get_half_extent().abs());
+          table_boxes.push_back(new Box3D(node_part, size, temp_mat, 0.0f));
+        }
+
+        for (unsigned int i = 0; i < table_boxes.size(); ++i) {
+          table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies);
+//           table_boxes[i]->getRigidBody()->getWorldTransform().setRotation()
         }
 
         ////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////
-        bool is_visible = true; // 1.0: visible for debug, 0.0f: invisible
+        bool is_visible = false; // 1.0: visible for debug, 0.0f: invisible
         Box3D table, BarrierTop, BarrierL, BarrierR;
         float tableWidth = 4.95f;
         float tableDepth = 0.5f;
