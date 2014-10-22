@@ -10,7 +10,6 @@
 #define OCTET_BULLET 1
 
 #include "../../octet.h"
-
 #include "Pinball_Wizzard.h"
 
 /// Create a box with octet
@@ -19,7 +18,7 @@ int main(int argc, char **argv) {
   octet::app::init_all(argc, argv);
 
   // our application.
-  octet::Pinball_Wizzard app(argc, argv);
+  octet::pinball::Pinball_Wizzard app(argc, argv);
   app.init();
 
   // open windows
