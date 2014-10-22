@@ -9,6 +9,7 @@
 #include "Box3D.h"
 #include "Pinball.h"
 #include "Flipper.h"
+#include "Table.h"
 
 namespace octet {
   namespace pinball {
@@ -129,9 +130,9 @@ namespace octet {
         BarrierR.getRigidBody()->setRestitution(barrierRestitution);
 
         // Barrier bottom
-        //BarrierBot.init_box(mat4t(), vec3(tableWidth, tableDepth, tableDepth), barrier_mat, 0.0f);
-        //BarrierBot.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
-        //BarrierBot.getRigidBody()->setRestitution(barrierRestitution);
+        BarrierBot.init_box(mat4t(), vec3(tableWidth, tableDepth, tableDepth), barrier_mat, 0.0f);
+        BarrierBot.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
+        BarrierBot.getRigidBody()->setRestitution(barrierRestitution);
 
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
         float torqueImpluse = 300.0f;

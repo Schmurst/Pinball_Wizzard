@@ -220,6 +220,7 @@
     <ClInclude Include="mesh_tri_prism.h" />
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="Pinball.h" />
+    <ClInclude Include="Table.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resources\mesh_builder.inl" />
