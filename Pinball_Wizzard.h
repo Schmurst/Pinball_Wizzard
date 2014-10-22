@@ -218,6 +218,33 @@ namespace octet {
 		  app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 1.0f, -5.5f));
       world->setGravity(btVector3(0, -9.81f, 0));
 
+      // Import collada from file.
+      resource_dict dict;
+      collada_builder colladaBuilder;
+      if (!colladaBuilder.load_xml("assets/TableGame.dae")) {
+        printf("failed to load the pinball table file");
+        return;
+      }
+      // get meshes and their respective nodes from dictionary
+      colladaBuilder.get_resources(dict);
+      dynarray<resource*> collada_meshes;
+      dict.find_all(collada_meshes, atom_mesh);
+      printf("collada_meshes size: %i\n", collada_meshes.size());
+
+
+      // stand in material for table
+      material *temp_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
+
+      // put the meshes and nodes in the scene... hopefully
+      for (int i = 0; i < collada_meshes.size(); i++) {
+        mesh *table_mesh = collada_meshes[i]->get_mesh();
+        scene_node *table_node = new scene_node();
+        table_node->translate(vec3(0, 2.0f, -4.5f));
+        app_scene->add_child(table_node);
+        app_scene->add_mesh_instance(new mesh_instance(table_node, table_mesh, temp_mat));
+      }
+
+      // Add a a fill light to the scene
       scene_node *light_node = new scene_node();
       light *light_fill = new light();
       light_fill->set_color(vec4(0.0f, 0.0f, 1.0f, 1.0f));
