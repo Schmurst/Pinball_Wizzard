@@ -237,17 +237,15 @@ namespace octet {
       camera_instance *camera = app_scene->get_camera_instance(0);
 		  mat4t modelToWorld; 
 
-      // Table RigidBody construction
-      // Table Construction
+      ////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////
 
       bool is_visible = true; // 1.0: visible for debug, 0.0f: invisible
-
-      Box3D table, tableTop, tableR, tableL, tableB;
+      Box3D table, tableTop, tableR, tableL, tableBot;
       float tableWidth = 4.95f;
       float tableDepth = 0.5f; 
       float tableLength = 10.0f;
-      float barrierRestitution = 1.0f;
-      material *table_buffer = new material(vec4(0.1f, 0.8f, 0.1f, 1.0f));
+      float barrierRestitution = 0.5f;
+      material *barrier_mat = new material(vec4(0.1f, 0.8f, 0.1f, 1.0f));
       material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
 
       // Table base
@@ -259,27 +257,31 @@ namespace octet {
 
       // Table Left
       modelToWorld.translate(-tableWidth - tableDepth, tableDepth, 0);
-      tableL.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2.0f, tableLength * 1.05f), table_buffer, 0.0f);
+      tableL.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2, tableLength * 1.05f), barrier_mat, 0.0f);
       tableL.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
       tableL.getRigidBody()->setRestitution(barrierRestitution);
       
 
       //table Right
       modelToWorld.translate(tableWidth * 2.0f + tableDepth * 2.0f, 0, 0);
-      tableR.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2.0f, tableLength * 1.05f), table_buffer, 0.0f);
+      tableR.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2, tableLength * 1.05f), barrier_mat, 0.0f);
       tableR.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
       tableR.getRigidBody()->setRestitution(barrierRestitution);
 
       // table bottom
+     // modelToWorld.translate(-tableWidth - tableDepth, 0, tableLength);
+      tableBot.init_box(modelToWorld, vec3(tableWidth, tableDepth, tableDepth), barrier_mat, 0.0f);
+      tableBot.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
+      tableBot.getRigidBody()->setRestitution(barrierRestitution);
 
-
-      // FLipper
+      ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
       float torqueImpluse = 300.0f;
       float initialOffset = 10.0f;
       float halfheightFlipper = 0.2f;
       float halfwidthFlipper = 0.2f;
       float halflengthFlipper = 1.2f;
       float massFlipper = 8.0f;
+      float flipperRestitution = 0.8f;
       material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
       btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, -halfheightFlipper);
@@ -294,6 +296,7 @@ namespace octet {
       modelToWorld.rotateX(-30.0f);
       flipperR.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, -1.0f) * torqueImpluse, massFlipper);    
       flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
+      flipperR.getRigidBody()->setRestitution(flipperRestitution);
 
       // add left flipper to the scene
       modelToWorld.loadIdentity();
@@ -301,6 +304,7 @@ namespace octet {
       modelToWorld.rotateX(-30.0f); 
       flipperL.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, 1.0f) * torqueImpluse, massFlipper); // x: 100 y: 20 z: 20
       flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
+      flipperL.getRigidBody()->setRestitution(flipperRestitution);
 
       // Add a constraint between flipper and table
       btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
@@ -319,13 +323,15 @@ namespace octet {
       world->addConstraint(hingeFlipperLeft);
       world->addConstraint(hingeFlipperRight);
 
+      ////////////////////////////////////////////////// Pinball ///////////////////////////////////////////
       // Add the pinball to the world
       material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
+      float pinballRestitution = 1.0f;
       modelToWorld.loadIdentity();
       modelToWorld.translate(1.0f, 6.0f, 0.0f);
       pinball.init_sphere(modelToWorld, 0.2f, sphere_mat, 1.0f);
       pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
-      pinball.getRigidBody()->setRestitution(barrierRestitution);
+      pinball.getRigidBody()->setRestitution(pinballRestitution);
 	}
 
     /// this is called to draw the world
