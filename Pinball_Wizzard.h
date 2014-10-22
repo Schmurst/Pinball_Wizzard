@@ -221,7 +221,6 @@ namespace octet {
         mesh *table_mesh = collada_meshes[i]->get_mesh();
         scene_node *table_node = dict.get_scene_node("TableNode");
         table_node->rotate(30.0f, vec3(1.0f, 0, 0));
-        table_node->translate(vec3(0, 0.0f, 0));
         app_scene->add_child(table_node);
         app_scene->add_mesh_instance(new mesh_instance(table_node, table_mesh, temp_mat));
       }
@@ -241,18 +240,19 @@ namespace octet {
       // Table RigidBody construction
       // Table Construction
 
-      bool is_visible = false; // 1.0: visible for debug, 0.0f: invisible
+      bool is_visible = true; // 1.0: visible for debug, 0.0f: invisible
 
       Box3D table, tableTop, tableR, tableL, tableB;
-      float tableWidth = 5.0f;
+      float tableWidth = 4.95f;
       float tableDepth = 0.5f; 
       float tableLength = 10.0f;
+      float barrierRestitution = 1.0f;
       material *table_buffer = new material(vec4(0.1f, 0.8f, 0.1f, 1.0f));
       material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
 
       // Table base
       modelToWorld.loadIdentity();
-      modelToWorld.translate(0.0f, -0.6f, 0.0f);
+      modelToWorld.translate(0.f, -0.6f, 0.0f);
       modelToWorld.rotateX(-30.0f);
       table.init_box(modelToWorld, vec3(tableWidth, tableDepth, tableLength), table_mat, 0.0f);    // mass = 0 -> static x: 1000 y: 100 z: 2000
       table.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
@@ -261,11 +261,14 @@ namespace octet {
       modelToWorld.translate(-tableWidth - tableDepth, tableDepth, 0);
       tableL.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2.0f, tableLength * 1.05f), table_buffer, 0.0f);
       tableL.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
+      tableL.getRigidBody()->setRestitution(barrierRestitution);
+      
 
       //table Right
       modelToWorld.translate(tableWidth * 2.0f + tableDepth * 2.0f, 0, 0);
       tableR.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2.0f, tableLength * 1.05f), table_buffer, 0.0f);
       tableR.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
+      tableR.getRigidBody()->setRestitution(barrierRestitution);
 
       // table bottom
 
@@ -322,6 +325,7 @@ namespace octet {
       modelToWorld.translate(1.0f, 6.0f, 0.0f);
       pinball.init_sphere(modelToWorld, 0.2f, sphere_mat, 1.0f);
       pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
+      pinball.getRigidBody()->setRestitution(barrierRestitution);
 	}
 
     /// this is called to draw the world
