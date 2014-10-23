@@ -101,9 +101,35 @@ namespace octet {
         scene_node *node_part;
         mesh *mesh_part;
         dynarray <Box3D*> table_boxes;
+
+        // Ensure always the the table node is at origin in blender
+        // make parent scene node (the table node from collada)
+        // rotate the node
+        // move it and (SCALE IN BLANDER FOO)
+        // instead of adding the barrier nodes to the directly to the scene
+        // instead add them as childs of the parent node (table node)
+
+        // tabe parent node
+        modelToWorld.loadIdentity();
+        scene_node *table_parent = new scene_node();
+        table_parent->access_nodeToParent() = modelToWorld;
+        table_parent->rotate(90.0f, vec3(1.0f, 0, 0));
+        app_scene->add_child(table_parent);
+
+        vec4 x = modelToWorld.x();
+        vec4 y = modelToWorld.y();
+        vec4 z = modelToWorld.z();
+        printf("\nTABLE NODE\n");
+        printf("      model to world matrix\n");
+        printf("x: %f y: %f z: %f \n", x[0], x[1], x[2]);
+        printf("x: %f y: %f z: %f \n", y[0], y[1], y[2]);
+        printf("x: %f y: %f z: %f \n", z[0], z[1], z[2]);
+        
+        // now for the table parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
           // get the node and mesh of each object in table parts list
           node_part = dict.get_scene_node(table_parts[i]);
+          table_parent->add_child(node_part);
           table_parts[i] += "-mesh";
           mesh_part = dict.get_mesh(table_parts[i]);
           // create axis_aligned bounding box
@@ -135,15 +161,20 @@ namespace octet {
         // this code loops throught the boxes created by the collada file and allows rotation and transformation
         // its does this by manipulating the node then setting the rigidbodies orientation.
         // it is important to set the rigidbodies orientation as that is what is updated in the update function
+
+        mat4t partToTable, tableToScene;
+
+        tableToScene = table_parent->access_nodeToParent();
+        btTransform tableTransform = btTransform(get_btMatrix3x3(tableToScene), get_btVector3(tableToScene[3].xyz()));
+
         for (unsigned int i = 0; i < table_boxes.size(); i++) {
-          modelToWorld = table_boxes[i]->getNode()->access_nodeToParent();
-          // modelToWorld.rotateX(-90.0f);
-          btVector3 pos = get_btVector3(modelToWorld[3].xyz());
-          btMatrix3x3 matrix = get_btMatrix3x3(modelToWorld);
-          btTransform transform = btTransform(matrix, pos);
+          partToTable = table_boxes[i]->getNode()->access_nodeToParent();
+          btVector3 pos = get_btVector3(partToTable[3].xyz());
+          btMatrix3x3 matrix = get_btMatrix3x3(partToTable);
+          btTransform partTransform = btTransform(matrix, pos);
           btRigidBody *rigidbody = table_boxes[i]->getRigidBody();
-          rigidbody->setWorldTransform(transform);
-          table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies);
+          rigidbody->setWorldTransform(tableTransform * partTransform);
+          table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
         }
 
         ////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////

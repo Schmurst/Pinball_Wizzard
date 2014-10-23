@@ -46,11 +46,13 @@ namespace octet {
       }
 
       /// This function is called to place the meshes and rigidbodies in the
-      void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
+      void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies, bool make_child = true) {
         btWorld.addRigidBody(rigidbody);
         rigidBodies.push_back(rigidbody);
         sceneNodes.push_back(node);
-        appScene->add_child(node);
+        if (make_child) {
+          appScene->add_child(node);
+        }
       }
 
       /// returns rigidbody

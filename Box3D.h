@@ -54,13 +54,15 @@ namespace octet {
       }
 
       /// Adds the mesh and rigidbody of the box to the scene
-      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies, bool is_visible = true) {
-        addToScene(sceneNodes, appScene, btWorld, rigidBodies);
+      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) {
+        addToScene(sceneNodes, appScene, btWorld, rigidBodies, make_child);
         // below is inefficient, still making node and box and whatever
         if (is_visible) {
           appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
         }
       }
+
+
 
 
       /// returns the size of the Object3D
