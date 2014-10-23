@@ -109,13 +109,33 @@ namespace octet {
           table_boxes.push_back(new Box3D(node_part, size, temp_mat, 0.0f));
         }
 
+        //btQuaternion btq = rigid_body->getOrientation();
+        //btVector3 pos = rigid_body->getCenterOfMassPosition();
+        //quat q(btq[0], btq[1], btq[2], btq[3]);
+        //mat4t modelToWorld = q;
+        //modelToWorld[3] = vec4(pos[0], pos[1], pos[2], 1);
+        //nodes[i]->access_nodeToParent() = modelToWorld;
+
+        // this code loops throught the boxes created by the collada file and allows rotation and transformation
+        // its does this by manipulating the node then setting the rigidbodies orientation.
+        // it is important to set the rigidbodies orientation as that is what is updated in the update function
         for (unsigned int i = 0; i < table_boxes.size(); ++i) {
+          modelToWorld = table_boxes[i]->getNode()->access_nodeToParent();
+          modelToWorld.rotateX(-90.0f);
+
+          //quat q = modelToWorld.toQuaternion();
+          //btQuaternion btq = btQuaternion(q[0], q[1], q[2], q[3]);
+
+          btVector3 pos = get_btVector3(modelToWorld[3].xyz());
+          btMatrix3x3 matrix = get_btMatrix3x3(modelToWorld);
+          btTransform transform = btTransform(matrix, pos);
+          btRigidBody *rigidbody = table_boxes[i]->getRigidBody();
+          rigidbody->setWorldTransform(transform);
           table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies);
-//           table_boxes[i]->getRigidBody()->getWorldTransform().setRotation()
         }
 
         ////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////
-        bool is_visible = false; // 1.0: visible for debug, 0.0f: invisible
+        bool is_visible = true; // 1.0: visible for debug, 0.0f: invisible
         Box3D table, BarrierTop, BarrierL, BarrierR;
         float tableWidth = 4.95f;
         float tableDepth = 0.5f;
