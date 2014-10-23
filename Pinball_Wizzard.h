@@ -53,6 +53,8 @@ namespace octet {
 
       /// this is called once OpenGL is initialized
       void app_init() {
+
+        bool collada_debug = true;
         app_scene = new visual_scene();
         app_scene->create_default_camera_and_lights();
         app_scene->get_camera_instance(0)->get_node()->rotate(-20.0f, vec3(1.0, 0, 0));
@@ -105,14 +107,27 @@ namespace octet {
           // create axis_aligned bounding box
           aabb aabb_part = mesh_part->get_aabb();
           // initialise bt box shape, using centre + halfextents (absolute to avoid stange errors)
-          vec3 size = (aabb_part.get_center() + aabb_part.get_half_extent().abs());
+          vec3 size = (aabb_part.get_center().abs() + aabb_part.get_half_extent().abs());
           table_boxes.push_back(new Box3D(node_part, size, temp_mat, 0.0f));
-        }
-
-        for (unsigned int i = 0; i < table_boxes.size(); i++) {
-          printf("Name of mesh: %s \n", table_parts[i]);
-          vec3 size = table_boxes[i]->getExtents();
-          printf("Half extents x: %f y: %f z: %f \n", size[0], size[1], size[2]);
+          // for debug mode
+          if (collada_debug) {
+            printf("\n --------------------------------------------------------------------");
+            printf("\nName of mesh: %s \n", table_parts[i]);
+            printf("Half extents  x: %f y: %f z: %f \n", size[0], size[1], size[2]);
+            printf("aabb center   x: %f y: %f z: %f \n", aabb_part.get_center()[0], aabb_part.get_center()[1], aabb_part.get_center()[2]);
+            printf("aabb extents  x: %f y: %f z: %f \n", aabb_part.get_half_extent()[0], aabb_part.get_half_extent()[1], aabb_part.get_half_extent()[2]);
+            printf("mesh extents  x: %f y: %f z: %f \n", mesh_part->get_size(0), mesh_part->get_size(1), mesh_part->get_size(2));
+            vec3 pos = node_part->access_nodeToParent()[3].xyz();
+            modelToWorld = node_part->access_nodeToParent();
+            vec4 x = modelToWorld.x();
+            vec4 y = modelToWorld.y();
+            vec4 z = modelToWorld.z();
+            printf("node position x: %f y: %f z: %f \n", pos[0], pos[1], pos[2]);
+            printf("      model to world matrix\n");
+            printf("x: %f y: %f z: %f \n", x[0], x[1], x[2]);
+            printf("x: %f y: %f z: %f \n", y[0], y[1], y[2]);
+            printf("x: %f y: %f z: %f \n", z[0], z[1], z[2]);
+          }
         }
 
         // this code loops throught the boxes created by the collada file and allows rotation and transformation
@@ -120,8 +135,7 @@ namespace octet {
         // it is important to set the rigidbodies orientation as that is what is updated in the update function
         for (unsigned int i = 0; i < table_boxes.size(); i++) {
           modelToWorld = table_boxes[i]->getNode()->access_nodeToParent();
-         // modelToWorld.scale(3.0f, 3.0f, 3.0f);
-         // modelToWorld.rotateX(-90.0f);
+          modelToWorld.rotateX(-90.0f);
           btVector3 pos = get_btVector3(modelToWorld[3].xyz());
           btMatrix3x3 matrix = get_btMatrix3x3(modelToWorld);
           btTransform transform = btTransform(matrix, pos);
@@ -131,7 +145,7 @@ namespace octet {
         }
 
         ////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////
-        bool is_visible = true; // 1.0: visible for debug, 0.0f: invisible
+        bool is_visible = false; // 1.0: visible for debug, 0.0f: invisible
         Box3D table, BarrierTop, BarrierL, BarrierR;
         float tableWidth = 4.95f;
         float tableDepth = 0.5f;
@@ -214,7 +228,7 @@ namespace octet {
         material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
         float pinballRestitution = 1.0f;
         modelToWorld.loadIdentity();
-        modelToWorld.translate(0.7f, 6.0f, -2.0f);
+        modelToWorld.translate(0.5f, 6.0f, -2.0f);
         pinball.init_sphere(modelToWorld, 0.4f, sphere_mat, 1.0f);
         pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
         pinball.getRigidBody()->setRestitution(pinballRestitution);
