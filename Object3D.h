@@ -63,8 +63,6 @@ namespace octet {
         return node;
       }
     };
-
-
   }
 }
 

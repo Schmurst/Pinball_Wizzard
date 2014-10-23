@@ -17,6 +17,7 @@ namespace octet {
     class Box3D : public Object3D {
     protected:
       mesh_box* meshBox;
+      vec3 halfExtents;
 
     public:
       /// Box3d Constructor, used to initialise a dynamic box.
@@ -42,6 +43,7 @@ namespace octet {
       /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene
       void init_box(mat4t model2world, vec3 size, material *material_box, float mass_box = 1.0f) {
         init(model2world, material_box, mass_box);
+        halfExtents = size;
         btCollisionShape *shape = new btBoxShape(get_btVector3(size));
         btVector3 inertialTensor;
         shape->calculateLocalInertia(mass, inertialTensor);
@@ -59,6 +61,13 @@ namespace octet {
           appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
         }
       }
+
+
+      /// returns the size of the Object3D
+      vec3 getExtents() {
+        return halfExtents;
+      }
+
     };
 
 
