@@ -9,6 +9,7 @@
 #include "Box3D.h"
 #include "Pinball.h"
 #include "Flipper.h"
+#include "Cylinder3D.h"
 
 namespace octet {
   namespace pinball {
@@ -93,6 +94,7 @@ namespace octet {
         table_parts.push_back("BarrierRight");
         table_parts.push_back("BarrierTop");
         table_parts.push_back("BarrierBase");
+        table_parts.push_back("Bumper001");
 
         // temporary material for table
         material *temp_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
