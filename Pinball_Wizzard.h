@@ -57,8 +57,8 @@ namespace octet {
         bool collada_debug = true;
         app_scene = new visual_scene();
         app_scene->create_default_camera_and_lights();
-        app_scene->get_camera_instance(0)->get_node()->rotate(-20.0f, vec3(1.0, 0, 0));
-        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -18.5f));
+        app_scene->get_camera_instance(0)->get_node()->rotate(-18.0f, vec3(1.0, 0, 0));
+        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 8.0f, -8.5f));
         world->setGravity(btVector3(0, -9.81f, 0));
         mat4t modelToWorld;
 
@@ -113,7 +113,7 @@ namespace octet {
         modelToWorld.loadIdentity();
         scene_node *table_parent = new scene_node();
         table_parent->access_nodeToParent() = modelToWorld;
-        table_parent->rotate(90.0f, vec3(1.0f, 0, 0));
+        table_parent->rotate(60.0f, vec3(1.0f, 0, 0));
         app_scene->add_child(table_parent);
 
         vec4 x = modelToWorld.x();
@@ -177,36 +177,36 @@ namespace octet {
           table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
         }
 
-        ////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////
-        bool is_visible = false; // 1.0: visible for debug, 0.0f: invisible
-        Box3D table, BarrierTop, BarrierL, BarrierR;
-        float tableWidth = 4.95f;
-        float tableDepth = 0.5f;
-        float tableLength = 10.0f;
-        float barrierRestitution = 0.5f;
-        float barrierThickness = 0.2f;
-        material *barrier_mat = new material(vec4(0.1f, 0.8f, 0.1f, 1.0f));
-        material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
+        //////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////
+        //bool is_visible = false; // 1.0: visible for debug, 0.0f: invisible
+        //Box3D table, BarrierTop, BarrierL, BarrierR;
+        //float tableWidth = 4.95f;
+        //float tableDepth = 0.5f;
+        //float tableLength = 10.0f;
+        //float barrierRestitution = 0.5f;
+        //float barrierThickness = 0.2f;
+        //material *barrier_mat = new material(vec4(0.1f, 0.8f, 0.1f, 1.0f));
+        //material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
 
-        // Table
-        modelToWorld.loadIdentity();
-        modelToWorld.translate(0.f, -0.6f, 0.0f);
-        modelToWorld.rotateX(-30.0f);
-        table.init_box(modelToWorld, vec3(tableWidth, tableDepth, tableLength), table_mat, 0.0f);    // mass = 0 -> static x: 1000 y: 100 z: 2000
-        table.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
+        //// Table
+        //modelToWorld.loadIdentity();
+        //modelToWorld.translate(0.f, -0.6f, 0.0f);
+        //modelToWorld.rotateX(-30.0f);
+        //table.init_box(modelToWorld, vec3(tableWidth, tableDepth, tableLength), table_mat, 0.0f);    // mass = 0 -> static x: 1000 y: 100 z: 2000
+        //table.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
 
-        // Barrier Left
-        modelToWorld.translate(-tableWidth - tableDepth, tableDepth, 0);
-        BarrierL.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2, tableLength * 1.05f), barrier_mat, 0.0f);
-        BarrierL.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
-        BarrierL.getRigidBody()->setRestitution(barrierRestitution);
+        //// Barrier Left
+        //modelToWorld.translate(-tableWidth - tableDepth, tableDepth, 0);
+        //BarrierL.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2, tableLength * 1.05f), barrier_mat, 0.0f);
+        //BarrierL.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
+        //BarrierL.getRigidBody()->setRestitution(barrierRestitution);
 
 
-        //Barrier Right
-        modelToWorld.translate(tableWidth * 2.0f + tableDepth * 2.0f, 0, 0);
-        BarrierR.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2, tableLength * 1.05f), barrier_mat, 0.0f);
-        BarrierR.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
-        BarrierR.getRigidBody()->setRestitution(barrierRestitution);
+        ////Barrier Right
+        //modelToWorld.translate(tableWidth * 2.0f + tableDepth * 2.0f, 0, 0);
+        //BarrierR.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2, tableLength * 1.05f), barrier_mat, 0.0f);
+        //BarrierR.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
+        //BarrierR.getRigidBody()->setRestitution(barrierRestitution);
 
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
         float torqueImpluse = 300.0f;
@@ -218,10 +218,10 @@ namespace octet {
         float flipperRestitution = 0.8f;
         material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
-        btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, -halfheightFlipper);
-        btVector3 hingeOffsetL = btVector3(-halflengthFlipper * 0.95f, 0, -halfheightFlipper);
-        btVector3 tableOffsetR = btVector3(halflengthFlipper * 2.2f, 0.5f, 8.0f);
-        btVector3 tableOffsetL = btVector3(-halflengthFlipper * 2.2f, 0.5f, 8.0f);
+        btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f , 0, 0);
+        btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, 0);
+        btVector3 tableOffsetR = btVector3(3.0f, -10.0f, 1.0f);
+        btVector3 tableOffsetL = btVector3(-3.0f, -10.0f, 1.0f);
         vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 
         // add right flipper to the scene
@@ -240,13 +240,16 @@ namespace octet {
         flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
         flipperL.getRigidBody()->setRestitution(flipperRestitution);
 
+        // get central table rigid body from rigidbodies dynarray
+        btRigidBody *table = rigid_bodies[0];
+
         // Add a constraint between flipper and table
-        btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table.getRigidBody()), (*flipperR.getRigidBody()),
+        btHingeConstraint *hingeFlipperRight = new btHingeConstraint( (*table), (*flipperR.getRigidBody()),
                                                                       tableOffsetR, hingeOffsetR,         // this are the hinge offset vectors
-                                                                      btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
-        btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table.getRigidBody()), (*flipperL.getRigidBody()),
+                                                                      btVector3(0, 0, 1.0f), btVector3(0, 0, 1.0f), false);
+        btHingeConstraint *hingeFlipperLeft = new btHingeConstraint( (*table), (*flipperL.getRigidBody()),
                                                                       tableOffsetL, hingeOffsetL,       // this are the hinge offset vectors
-                                                                      btVector3(0, 1.0f, 0), btVector3(0, 0, 1.0f), false);
+                                                                      btVector3(0, 0, 1.0f), btVector3(0, 0, 1.0f), false);
 
         // set angle limits on the flippers
         hingeFlipperLeft->setLimit(-PI * 0.2f, PI * 0.2f);
