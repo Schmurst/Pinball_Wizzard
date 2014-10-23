@@ -58,7 +58,7 @@ namespace octet {
         app_scene = new visual_scene();
         app_scene->create_default_camera_and_lights();
         app_scene->get_camera_instance(0)->get_node()->rotate(-20.0f, vec3(1.0, 0, 0));
-        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -8.5f));
+        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -18.5f));
         world->setGravity(btVector3(0, -9.81f, 0));
         mat4t modelToWorld;
 
@@ -91,6 +91,8 @@ namespace octet {
         table_parts.push_back("Table");
         table_parts.push_back("BarrierLeft");
         table_parts.push_back("BarrierRight");
+        table_parts.push_back("BarrierTop");
+        table_parts.push_back("BarrierBase");
 
         // temporary material for table
         material *temp_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
@@ -135,7 +137,7 @@ namespace octet {
         // it is important to set the rigidbodies orientation as that is what is updated in the update function
         for (unsigned int i = 0; i < table_boxes.size(); i++) {
           modelToWorld = table_boxes[i]->getNode()->access_nodeToParent();
-          modelToWorld.rotateX(-90.0f);
+          // modelToWorld.rotateX(-90.0f);
           btVector3 pos = get_btVector3(modelToWorld[3].xyz());
           btMatrix3x3 matrix = get_btMatrix3x3(modelToWorld);
           btTransform transform = btTransform(matrix, pos);
@@ -228,7 +230,7 @@ namespace octet {
         material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
         float pinballRestitution = 1.0f;
         modelToWorld.loadIdentity();
-        modelToWorld.translate(0.5f, 6.0f, -2.0f);
+        modelToWorld.translate(0.7f, 6.0f, -2.0f);
         pinball.init_sphere(modelToWorld, 0.4f, sphere_mat, 1.0f);
         pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
         pinball.getRigidBody()->setRestitution(pinballRestitution);
