@@ -163,7 +163,6 @@ namespace octet {
         // it is important to set the rigidbodies orientation as that is what is updated in the update function
 
         mat4t partToTable, tableToScene;
-
         tableToScene = table_parent->access_nodeToParent();
         btTransform tableTransform = btTransform(get_btMatrix3x3(tableToScene), get_btVector3(tableToScene[3].xyz()));
 
@@ -177,36 +176,19 @@ namespace octet {
           table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
         }
 
-        //////////////////////////////////////////////////// table Rigidbody construction ///////////////////////////////////////////
-        //bool is_visible = false; // 1.0: visible for debug, 0.0f: invisible
-        //Box3D table, BarrierTop, BarrierL, BarrierR;
-        //float tableWidth = 4.95f;
-        //float tableDepth = 0.5f;
-        //float tableLength = 10.0f;
-        //float barrierRestitution = 0.5f;
-        //float barrierThickness = 0.2f;
-        //material *barrier_mat = new material(vec4(0.1f, 0.8f, 0.1f, 1.0f));
-        //material *table_mat = new material(vec4(0, 1.0f, 0, 1.0f));
+        
 
-        //// Table
-        //modelToWorld.loadIdentity();
-        //modelToWorld.translate(0.f, -0.6f, 0.0f);
-        //modelToWorld.rotateX(-30.0f);
-        //table.init_box(modelToWorld, vec3(tableWidth, tableDepth, tableLength), table_mat, 0.0f);    // mass = 0 -> static x: 1000 y: 100 z: 2000
-        //table.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
+        // this code will loop throught the rigidbodies and set the right restitution for the parts
+        for (unsigned int i = 0; i < table_parts.size(); i++) {
+          if (table_parts[i].find("Barrier") != -1) {
+            table_boxes[i]->getRigidBody()->setRestitution(0.8f);
+          } 
 
-        //// Barrier Left
-        //modelToWorld.translate(-tableWidth - tableDepth, tableDepth, 0);
-        //BarrierL.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2, tableLength * 1.05f), barrier_mat, 0.0f);
-        //BarrierL.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
-        //BarrierL.getRigidBody()->setRestitution(barrierRestitution);
+          if (table_parts[i].find("BarrierBase") != -1) {
+            table_boxes[i]->getRigidBody()->setRestitution(1.5f);
+          }
 
-
-        ////Barrier Right
-        //modelToWorld.translate(tableWidth * 2.0f + tableDepth * 2.0f, 0, 0);
-        //BarrierR.init_box(modelToWorld, vec3(tableDepth, tableDepth * 2, tableLength * 1.05f), barrier_mat, 0.0f);
-        //BarrierR.add_to_scene(nodes, app_scene, (*world), rigid_bodies, is_visible);
-        //BarrierR.getRigidBody()->setRestitution(barrierRestitution);
+        }
 
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
         float torqueImpluse = 300.0f;
