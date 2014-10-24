@@ -37,9 +37,25 @@ namespace octet {
         rigidbody->applyTorqueImpulse(flipTorque);
         // printf("Flipper function has been activated");
       }
+
+      /// Adds the mesh and rigidbody of the box to the scene
+      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
+                        dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) {
+        btWorld.addRigidBody(rigidbody);
+        rigidBodies.push_back(rigidbody);
+        sceneNodes.push_back(node);
+        printf("Box3D added to scene\n");
+        // below is inefficient, still making node and box and whatever
+        if (is_visible) {
+          appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
+        }
+        if (make_child) {
+          appScene->add_child(node);
+        }
+      }
+
+
     };
-
-
   }
 }
 

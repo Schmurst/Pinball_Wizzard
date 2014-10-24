@@ -11,7 +11,7 @@
 #include "Object3D.h"
 
 namespace octet {
-  namespace Cylinder3D {
+  namespace pinball {
 
     /// Cylinder3D class, a simple 3d cylinder, dynamic
     class Cylinder3D : public Object3D {
@@ -24,35 +24,53 @@ namespace octet {
       /// Cylinder3D Constructor
       Cylinder3D()
       {}
+
+      /// Cylinder 4 arg constructor using modeltoworld
+      Cylinder3D(mat4t model2world, float rad, float half_height, material *cylinder_material, float cylinder_mass = 1.0f) {
+        init_cylinder(model2world, rad, half_height, cylinder_material, cylinder_mass);
+      }
+
+      /// Cylinder 4 arg constructor using ready made node
+      Cylinder3D(scene_node *node, float rad, float half_height, material *cylinder_material, float cylinder_mass = 1.0f) {
+        modelToWorld = node->access_nodeToParent();
+        init_cylinder(modelToWorld, rad, half_height, cylinder_material, cylinder_mass);
+      }
+
       /// Cylinder3D Destructor
       ~Cylinder3D(){
       }
 
       /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene
-      void init_cylinder(mat4t model2world, float rad, float , material *cylinder_material, float cylinder_mass = 1.0f) {
+      void init_cylinder(mat4t model2world, float rad, float half_height, material *cylinder_material, float cylinder_mass = 1.0f) {
         init(model2world, cylinder_material, cylinder_mass);
-        btCollisionShape *shape = new btCylinderShape();
+        radii = rad;
+        height = half_height;
+        btCollisionShape *shape = new btCylinderShape(btVector3(radii, radii, height));
         btVector3 inertialTensor;
         shape->calculateLocalInertia(mass, inertialTensor);
         rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
         // init mesh_box and scene node
-        meshcylinder = new mesh_cylinder(vec3(0), rad);
+        meshCylinder = new mesh_cylinder(zcylinder(vec3(), radii, height));
         node = new scene_node(modelToWorld, atom_);
       }
 
       /// Adds the mesh and rigidbody of the cylinder to the scene
-      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies) {
-        addToScene(sceneNodes, appScene, btWorld, rigidBodies);
-        appScene->add_mesh_instance(new mesh_instance(node, meshcylinder, mat));
+      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
+                        dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) {
+       btWorld.addRigidBody(rigidbody);
+       rigidBodies.push_back(rigidbody);
+       sceneNodes.push_back(node);
+       printf("Cylinder3D added to scene\n");
+       appScene->add_mesh_instance(new mesh_instance(node, meshCylinder, mat));
+       if (make_child) {
+         appScene->add_child(node);
+        }
       }
 
       /// Moves Cylinder3D to position within world
       void setPosition(vec3 pos) {
         node->access_nodeToParent().loadIdentity();
       }
-    };
-
-
     };
   }
 }

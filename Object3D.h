@@ -45,15 +45,9 @@ namespace octet {
         motionState = new btDefaultMotionState(transform);
       }
 
-      /// This function is called to place the meshes and rigidbodies in the
-      void addToScene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld, dynarray<btRigidBody*> &rigidBodies, bool make_child = true) {
-        btWorld.addRigidBody(rigidbody);
-        rigidBodies.push_back(rigidbody);
-        sceneNodes.push_back(node);
-        if (make_child) {
-          appScene->add_child(node);
-        }
-      }
+      /// pure virtual function used make class abstract
+      virtual void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
+                                dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) = 0;
 
       /// returns rigidbody
       btRigidBody* getRigidBody() {

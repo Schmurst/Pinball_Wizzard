@@ -60,7 +60,7 @@ namespace octet {
         app_scene->create_default_camera_and_lights();
         app_scene->get_camera_instance(0)->get_node()->rotate(-18.0f, vec3(1.0, 0, 0));
         app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 8.0f, -8.5f));
-        world->setGravity(btVector3(0, -9.81f, 0));
+        world->setGravity(btVector3(0, -19.81f, 0));
         mat4t modelToWorld;
 
         // Add a a fill light to the scene and create camera instance
@@ -102,7 +102,7 @@ namespace octet {
         // put the meshes and nodes in the scene... hopefully
         scene_node *node_part;
         mesh *mesh_part;
-        dynarray <Box3D*> table_boxes;
+        dynarray <Object3D*> table_boxes;
 
         // Ensure always the the table node is at origin in blender
         // make parent scene node (the table node from collada)
@@ -138,7 +138,23 @@ namespace octet {
           aabb aabb_part = mesh_part->get_aabb();
           // initialise bt box shape, using centre + halfextents (absolute to avoid stange errors)
           vec3 size = (aabb_part.get_center().abs() + aabb_part.get_half_extent().abs());
-          table_boxes.push_back(new Box3D(node_part, size, temp_mat, 0.0f));
+
+          // the following check decides whether a collada mesh instance should be converted into a 
+          // Box3D object or a Cylinder3D object depending on the collada mesh name
+
+          if ((table_parts[i].find("Table") != -1) || (table_parts[i].find("Barrier") != -1)) {
+            table_boxes.push_back(new Box3D(node_part, size, temp_mat, 0.0f));
+          }
+          else if (table_parts[i].find("Bumper") != -1) {
+            float rad = size[0];  // here we assume that the cylinder is of constant radius
+            float height = size[2];
+            table_boxes.push_back(new Cylinder3D(node_part, rad, height, temp_mat, 0.0f));
+          }
+          else {
+            printf("Collada mesh Object name not recognised, default Box3D loader used");
+            table_boxes.push_back(new Box3D(node_part, size, temp_mat, 0.0f));
+          }
+
           // for debug mode
           if (collada_debug) {
             printf("\n --------------------------------------------------------------------");
@@ -177,8 +193,6 @@ namespace octet {
           rigidbody->setWorldTransform(tableTransform * partTransform);
           table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
         }
-
-        
 
         // this code will loop throught the rigidbodies and set the right restitution for the parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
