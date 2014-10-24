@@ -71,6 +71,11 @@ namespace octet {
       void setPosition(vec3 pos) {
         node->access_nodeToParent().loadIdentity();
       }
+
+      /// returns the cylinder mesh
+      mesh_cylinder* get_mesh() {
+        return meshCylinder;
+      }
     };
   }
 }

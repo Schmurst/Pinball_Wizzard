@@ -155,7 +155,7 @@ namespace octet {
             table_boxes.push_back(new Box3D(node_part, size, barrier_mat, 0.0f));
           }
           else if (table_parts[i].find("Bumper") != -1) {
-            float rad = (size[0] > size[1]) ? size[0] : size[1];
+            float rad = size[0];
             float height = size[2];
             table_boxes.push_back(new Cylinder3D(node_part, rad, height, bumper_mat, 0.0f));
           }
