@@ -95,9 +95,15 @@ namespace octet {
         table_parts.push_back("BarrierTop");
         table_parts.push_back("BarrierBase");
         table_parts.push_back("Bumper001");
+        table_parts.push_back("Bumper002");
+        table_parts.push_back("Bumper003");
+        table_parts.push_back("Bumper004");
 
         // temporary material for table
-        material *temp_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
+        material *table_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
+        material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
+        material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
+        material *error_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
         // put the meshes and nodes in the scene... hopefully
         scene_node *node_part;
@@ -142,17 +148,20 @@ namespace octet {
           // the following check decides whether a collada mesh instance should be converted into a 
           // Box3D object or a Cylinder3D object depending on the collada mesh name
 
-          if ((table_parts[i].find("Table") != -1) || (table_parts[i].find("Barrier") != -1)) {
-            table_boxes.push_back(new Box3D(node_part, size, temp_mat, 0.0f));
+          if (table_parts[i].find("Table") != -1) {
+            table_boxes.push_back(new Box3D(node_part, size, table_mat, 0.0f));
+          }
+          else if (table_parts[i].find("Barrier") != -1) {
+            table_boxes.push_back(new Box3D(node_part, size, barrier_mat, 0.0f));
           }
           else if (table_parts[i].find("Bumper") != -1) {
-            float rad = size[0];  // here we assume that the cylinder is of constant radius
+            float rad = (size[0] > size[1]) ? size[0] : size[1];
             float height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, rad, height, temp_mat, 0.0f));
+            table_boxes.push_back(new Cylinder3D(node_part, rad, height, bumper_mat, 0.0f));
           }
           else {
             printf("Collada mesh Object name not recognised, default Box3D loader used");
-            table_boxes.push_back(new Box3D(node_part, size, temp_mat, 0.0f));
+            table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
           }
 
           // for debug mode
@@ -201,6 +210,10 @@ namespace octet {
           } 
 
           if (table_parts[i].find("BarrierBase") != -1) {
+            table_boxes[i]->getRigidBody()->setRestitution(1.5f);
+          }
+
+          if (table_parts[i].find("Bumper") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
           }
 
