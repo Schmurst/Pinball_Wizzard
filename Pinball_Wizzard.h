@@ -58,9 +58,9 @@ namespace octet {
         bool collada_debug = true;
         app_scene = new visual_scene();
         app_scene->create_default_camera_and_lights();
-        app_scene->get_camera_instance(0)->get_node()->rotate(-25.0f, vec3(1.0, 0, 0));
-        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 12.0f, -9.5f));
-        app_scene->get_camera_instance(0)->set_perspective(0, 60, 1, 0.1f, 50.0f);
+        app_scene->get_camera_instance(0)->get_node()->rotate(-22.0f, vec3(1.0, 0, 0));
+        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -9.5f));
+        app_scene->get_camera_instance(0)->set_perspective(0, 70, 1, 0.1f, 50.0f);
         world->setGravity(btVector3(0, -19.81f, 0));
         mat4t modelToWorld;
 
@@ -109,7 +109,7 @@ namespace octet {
         table_parts.push_back("Reflector");
         table_parts.push_back("Guide");
         table_parts.push_back("Launcher");
-        // table_parts.push_back("BumperMouth");
+        table_parts.push_back("BumperMouth");
 
         // temporary material for table
         material *table_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
@@ -246,7 +246,7 @@ namespace octet {
 
         btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f , 0, 0);
         btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, 0);
-        btVector3 tableOffsetR = btVector3(2.0f, -11.5f, 1.0f);
+        btVector3 tableOffsetR = btVector3(1.0f, -11.5f, 1.0f);
         btVector3 tableOffsetL = btVector3(-4.0f, -11.5f, 1.0f);
         vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 

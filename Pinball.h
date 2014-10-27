@@ -19,6 +19,11 @@ namespace octet {
       float radii;
       mesh_sphere *meshSphere;
       btTransform trans;
+      // following variables are used to impement randomness in the pinball drop
+      random *seed;
+      mat4t matrix;
+      vec3 vec;
+
 
     public:
       /// Pinball Constructor
@@ -39,7 +44,8 @@ namespace octet {
         meshSphere = new mesh_sphere(vec3(0), rad);
         node = new scene_node(modelToWorld, atom_);
 
-
+        seed = new random();
+        matrix.loadIdentity();
       }
 
       /// Adds the mesh and rigidbody of the sphere to the scene
@@ -57,10 +63,10 @@ namespace octet {
 
       /// Moves Pinball to position within world
       void reset() {
-        mat4t mat;
-        vec3 vec = vec3(8.0f, 6.0f, 5.0f);
-        mat.loadIdentity();
-        trans = btTransform(get_btMatrix3x3(mat), get_btVector3(vec));
+        float x = seed->get(7.8f, 9.4f);
+        vec = vec3(x, 4.0f, 5.0f);
+        printf("Randomx: %f\n", x);
+        trans = btTransform(get_btMatrix3x3(matrix), get_btVector3(vec));
         rigidbody->setWorldTransform(trans);
         rigidbody->setLinearVelocity(get_btVector3(vec3(0, 0, 0)));
       }
