@@ -113,7 +113,7 @@ namespace octet {
         // Ensure always the the table node is at origin in blender
         // make parent scene node (the table node from collada)
         // rotate the node
-        // move it and (SCALE IN BLANDER FOO)
+        // move it and (SCALE IN BLENDER ALWAYS)
         // instead of adding the barrier nodes to the directly to the scene
         // instead add them as childs of the parent node (table node)
 
@@ -158,6 +158,7 @@ namespace octet {
             float rad = size[0];
             float height = size[2];
             table_boxes.push_back(new Cylinder3D(node_part, rad, height, bumper_mat, 0.0f));
+            table_boxes[i]->setMesh(mesh_part);
           }
           else {
             printf("Collada mesh Object name not recognised, default Box3D loader used");

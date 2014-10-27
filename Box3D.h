@@ -60,9 +60,12 @@ namespace octet {
         rigidBodies.push_back(rigidbody);
         sceneNodes.push_back(node);
         printf("Box3D added to scene\n");
-        // below is inefficient, still making node and box and whatever
-        if (is_visible) {
+        // below is inefficient, as it still creates the box
+        if (is_visible && colladaMesh == nullptr) {
           appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
+        }
+        else if (is_visible && colladaMesh != nullptr) {
+          appScene->add_mesh_instance(new mesh_instance(node, colladaMesh, mat));
         }
         if (make_child) {
           appScene->add_child(node);

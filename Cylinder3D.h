@@ -61,7 +61,12 @@ namespace octet {
        rigidBodies.push_back(rigidbody);
        sceneNodes.push_back(node);
        printf("Cylinder3D added to scene\n");
-       appScene->add_mesh_instance(new mesh_instance(node, meshCylinder, mat));
+       if (is_visible && colladaMesh == NULL) {
+         appScene->add_mesh_instance(new mesh_instance(node, meshCylinder, mat));
+       }
+       else if (is_visible && colladaMesh != NULL) {
+         appScene->add_mesh_instance(new mesh_instance(node, colladaMesh, mat));
+       }
        if (make_child) {
          appScene->add_child(node);
         }
@@ -72,10 +77,6 @@ namespace octet {
         node->access_nodeToParent().loadIdentity();
       }
 
-      /// returns the cylinder mesh
-      mesh_cylinder* get_mesh() {
-        return meshCylinder;
-      }
     };
   }
 }

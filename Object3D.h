@@ -20,6 +20,7 @@ namespace octet {
       btScalar mass;
       btMotionState *motionState;
       btRigidBody *rigidbody;
+      mesh *colladaMesh;  // only to be used when loading meshes from collada
 
     public:
       /// Empty constructor
@@ -33,6 +34,7 @@ namespace octet {
       /// initialise the Object3D
       void init(mat4t_in model2World, material *mat_object, btScalar mass_object) {
         // assign private data
+        colladaMesh = nullptr;
         modelToWorld = model2World;
         mat = mat_object;
         mass = mass_object;
@@ -58,6 +60,12 @@ namespace octet {
       scene_node* getNode() {
         return node;
       }
+
+      /// virtual function to allow setting the mesh
+      virtual void setMesh(mesh *mesh) {
+        colladaMesh = mesh;
+      }
+
     };
   }
 }
