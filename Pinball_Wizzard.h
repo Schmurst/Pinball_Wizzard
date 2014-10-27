@@ -33,7 +33,7 @@ namespace octet {
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
       Pinball pinball;
-      int flipDelayL = 0, flipDelayR = 0;
+      int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
       int flipperCoolDown = 15; // frames between flips
 
     public:
@@ -112,7 +112,7 @@ namespace octet {
         table_parts.push_back("BumperMouth");
 
         // temporary material for table
-        material *table_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
+        material *table_mat = new material(new image("assets/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
         material *error_mat = new material(vec4(1.0f, 0, 0, 1.0f));
@@ -224,7 +224,7 @@ namespace octet {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
           } 
 
-          if (table_parts[i].find("Bumper") != -1) {
+          if (table_parts[i].find("Bumper") != -1 || table_parts[i].find("Guide") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
           }
 
@@ -287,7 +287,7 @@ namespace octet {
 
         ////////////////////////////////////////////////// Pinball ///////////////////////////////////////////
         // Add the pinball to the world
-        material *sphere_mat = new material(vec4(1.0f, 0, 0.8f, 1.0f));
+        material *sphere_mat = new material(new image("assets/earth.gif"));
         float pinballRestitution = 1.0f;
         modelToWorld.loadIdentity();
         modelToWorld.translate(0.7f, 6.0f, -2.0f);
@@ -323,6 +323,10 @@ namespace octet {
           flipDelayR--;
         }
 
+        if (pinballResetDelay > 0) {
+          pinballResetDelay--;
+        }
+
         // Key handlers, when pushed will flip the flippers
         if (is_key_down('Z') && flipDelayR == 0) {
           flipperL.flip();
@@ -334,8 +338,9 @@ namespace octet {
           flipDelayL = flipperCoolDown;
         }
 
-        if (is_key_down(' ')) {
+        if (is_key_down(' ') && pinballResetDelay == 0) {
           pinball.reset();
+          pinballResetDelay = flipperCoolDown;
         }
 
         // update matrices. assume 30 fps.
