@@ -100,6 +100,12 @@ namespace octet {
         table_parts.push_back("Bumper004");
         table_parts.push_back("Bumper005");
         table_parts.push_back("Bumper006");
+        table_parts.push_back("EyeBrowLeft");
+        table_parts.push_back("EyeBrowRight");
+        table_parts.push_back("Reflector");
+        table_parts.push_back("Guide");
+        table_parts.push_back("Launcher");
+        table_parts.push_back("Resetter");
 
         // temporary material for table
         material *table_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
@@ -123,7 +129,7 @@ namespace octet {
         modelToWorld.loadIdentity();
         scene_node *table_parent = new scene_node();
         table_parent->access_nodeToParent() = modelToWorld;
-        table_parent->rotate(60.0f, vec3(1.0f, 0, 0));
+        //table_parent->rotate(60.0f, vec3(1.0f, 0, 0));
         app_scene->add_child(table_parent);
 
         vec4 x = modelToWorld.x();
