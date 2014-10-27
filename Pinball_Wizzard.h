@@ -59,7 +59,7 @@ namespace octet {
         app_scene = new visual_scene();
         app_scene->create_default_camera_and_lights();
         app_scene->get_camera_instance(0)->get_node()->rotate(-18.0f, vec3(1.0, 0, 0));
-        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 8.0f, -8.5f));
+        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 9.0f, -7.5f));
         world->setGravity(btVector3(0, -19.81f, 0));
         mat4t modelToWorld;
 
@@ -129,7 +129,7 @@ namespace octet {
         modelToWorld.loadIdentity();
         scene_node *table_parent = new scene_node();
         table_parent->access_nodeToParent() = modelToWorld;
-        //table_parent->rotate(60.0f, vec3(1.0f, 0, 0));
+        table_parent->rotate(60.0f, vec3(1.0f, 0, 0));
         app_scene->add_child(table_parent);
 
         vec4 x = modelToWorld.x();
@@ -148,6 +148,7 @@ namespace octet {
           table_parent->add_child(node_part);
           table_parts[i] += "-mesh";
           mesh_part = dict.get_mesh(table_parts[i]);
+
           // create axis_aligned bounding box
           aabb aabb_part = mesh_part->get_aabb();
           // initialise bt box shape, using centre + halfextents (absolute to avoid stange errors)
@@ -326,6 +327,10 @@ namespace octet {
         if (is_key_down('M') && flipDelayL == 0) {
           flipperR.flip();
           flipDelayL = flipperCoolDown;
+        }
+
+        if (is_key_down(' ')) {
+          pinball.reset();
         }
 
         // update matrices. assume 30 fps.

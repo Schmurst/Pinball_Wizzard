@@ -18,6 +18,7 @@ namespace octet {
     private:
       float radii;
       mesh_sphere *meshSphere;
+      btTransform trans;
 
     public:
       /// Pinball Constructor
@@ -37,6 +38,8 @@ namespace octet {
         // init mesh_box and scene node
         meshSphere = new mesh_sphere(vec3(0), rad);
         node = new scene_node(modelToWorld, atom_);
+
+
       }
 
       /// Adds the mesh and rigidbody of the sphere to the scene
@@ -53,8 +56,12 @@ namespace octet {
       }
 
       /// Moves Pinball to position within world
-      void setPosition(vec3 pos) {
-        node->access_nodeToParent().loadIdentity();
+      void reset() {
+        mat4t mat;
+        vec3 vec = vec3(8.0f, 6.0f, -3.0f);
+        mat.loadIdentity();
+        trans = btTransform(get_btMatrix3x3(mat), get_btVector3(vec));
+        rigidbody->setWorldTransform(trans);
       }
     };
 

@@ -16,7 +16,7 @@ namespace octet {
     /// Box3D class, simple 3d box class, can be dynamic
     class Box3D : public Object3D {
     protected:
-      mesh_box* meshBox;
+      mesh_box *meshBox;
       vec3 halfExtents;
 
     public:
