@@ -98,6 +98,8 @@ namespace octet {
         table_parts.push_back("Bumper002");
         table_parts.push_back("Bumper003");
         table_parts.push_back("Bumper004");
+        table_parts.push_back("Bumper005");
+        table_parts.push_back("Bumper006");
 
         // temporary material for table
         material *table_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
