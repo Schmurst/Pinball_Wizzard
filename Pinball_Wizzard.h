@@ -115,6 +115,7 @@ namespace octet {
         material *table_mat = new material(new image("assets/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
+        material *wizzard_mat = new material(vec4(0.1f, 0.1f, 0.1f, 1.0f));
         material *error_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
         // put the meshes and nodes in the scene... hopefully
@@ -167,11 +168,19 @@ namespace octet {
           else if (table_parts[i].find("Barrier") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, barrier_mat, 0.0f));
           }
-          else if (table_parts[i].find("Bumper") != -1 || table_parts[i].find("Bumper") != -1) {
+          else if (table_parts[i].find("Brow") != -1) {
+            table_boxes.push_back(new Box3D(node_part, size, wizzard_mat, 0.0f));
+          }
+          else if (table_parts[i].find("Bumper") != -1) {
             float radii, height;
             radii = size[0];
             height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
+            if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth") != -1) {
+              table_boxes.push_back(new Cylinder3D(node_part, radii, height, wizzard_mat, 0.0f));
+            }
+            else {
+              table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
+            }
             table_boxes[i]->setMesh(mesh_part);
           }
           else {
@@ -220,11 +229,11 @@ namespace octet {
 
         // this code will loop throught the rigidbodies and set the right restitution for the parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
-          if (table_parts[i].find("Barrier") != -1) {
+          if (table_parts[i].find("Barrier") != -1 || table_parts[i].find("Guide") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
           } 
 
-          if (table_parts[i].find("Bumper") != -1 || table_parts[i].find("Guide") != -1) {
+          if (table_parts[i].find("Bumper") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
           }
 
