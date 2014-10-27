@@ -58,10 +58,11 @@ namespace octet {
       /// Moves Pinball to position within world
       void reset() {
         mat4t mat;
-        vec3 vec = vec3(8.0f, 6.0f, -3.0f);
+        vec3 vec = vec3(8.0f, 6.0f, 5.0f);
         mat.loadIdentity();
         trans = btTransform(get_btMatrix3x3(mat), get_btVector3(vec));
         rigidbody->setWorldTransform(trans);
+        rigidbody->setLinearVelocity(get_btVector3(vec3(0, 0, 0)));
       }
     };
 

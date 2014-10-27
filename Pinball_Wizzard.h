@@ -58,8 +58,9 @@ namespace octet {
         bool collada_debug = true;
         app_scene = new visual_scene();
         app_scene->create_default_camera_and_lights();
-        app_scene->get_camera_instance(0)->get_node()->rotate(-18.0f, vec3(1.0, 0, 0));
-        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 9.0f, -7.5f));
+        app_scene->get_camera_instance(0)->get_node()->rotate(-25.0f, vec3(1.0, 0, 0));
+        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 12.0f, -9.5f));
+        app_scene->get_camera_instance(0)->set_perspective(0, 60, 1, 0.1f, 50.0f);
         world->setGravity(btVector3(0, -19.81f, 0));
         mat4t modelToWorld;
 
@@ -93,19 +94,22 @@ namespace octet {
         table_parts.push_back("BarrierLeft");
         table_parts.push_back("BarrierRight");
         table_parts.push_back("BarrierTop");
-        table_parts.push_back("BarrierBase");
         table_parts.push_back("Bumper001");
         table_parts.push_back("Bumper002");
         table_parts.push_back("Bumper003");
         table_parts.push_back("Bumper004");
         table_parts.push_back("Bumper005");
         table_parts.push_back("Bumper006");
+        table_parts.push_back("BumperLeft");
+        table_parts.push_back("BumperRight");
+        table_parts.push_back("BumperEyeLeft");
+        table_parts.push_back("BumperEyeRight");
         table_parts.push_back("EyeBrowLeft");
         table_parts.push_back("EyeBrowRight");
         table_parts.push_back("Reflector");
         table_parts.push_back("Guide");
         table_parts.push_back("Launcher");
-        table_parts.push_back("Resetter");
+        // table_parts.push_back("BumperMouth");
 
         // temporary material for table
         material *table_mat = new material(vec4(0.2f, 0.5f, 0.8f, 1.0f));
@@ -163,10 +167,11 @@ namespace octet {
           else if (table_parts[i].find("Barrier") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, barrier_mat, 0.0f));
           }
-          else if (table_parts[i].find("Bumper") != -1) {
-            float rad = size[0];
-            float height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, rad, height, bumper_mat, 0.0f));
+          else if (table_parts[i].find("Bumper") != -1 || table_parts[i].find("Bumper") != -1) {
+            float radii, height;
+            radii = size[0];
+            height = size[2];
+            table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
             table_boxes[i]->setMesh(mesh_part);
           }
           else {
@@ -219,12 +224,12 @@ namespace octet {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
           } 
 
-          if (table_parts[i].find("BarrierBase") != -1) {
+          if (table_parts[i].find("Bumper") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
           }
 
-          if (table_parts[i].find("Bumper") != -1) {
-            table_boxes[i]->getRigidBody()->setRestitution(1.5f);
+          if (table_parts[i].find("Mouth") != -1 || table_parts[i].find("Launcher") != -1) {
+            table_boxes[i]->getRigidBody()->setRestitution(5.0f);
           }
 
         }
@@ -241,8 +246,8 @@ namespace octet {
 
         btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f , 0, 0);
         btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, 0);
-        btVector3 tableOffsetR = btVector3(3.0f, -10.0f, 1.0f);
-        btVector3 tableOffsetL = btVector3(-3.0f, -10.0f, 1.0f);
+        btVector3 tableOffsetR = btVector3(2.0f, -11.5f, 1.0f);
+        btVector3 tableOffsetL = btVector3(-4.0f, -11.5f, 1.0f);
         vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 
         // add right flipper to the scene

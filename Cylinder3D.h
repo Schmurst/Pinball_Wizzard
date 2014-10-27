@@ -45,7 +45,7 @@ namespace octet {
         init(model2world, cylinder_material, cylinder_mass);
         radii = rad;
         height = half_height;
-        btCollisionShape *shape = new btCylinderShape(btVector3(radii, radii, height));
+        btCollisionShape *shape = new btCylinderShapeZ(btVector3(radii, radii, height));
         btVector3 inertialTensor;
         shape->calculateLocalInertia(mass, inertialTensor);
         rigidbody = new btRigidBody(mass, motionState, shape, inertialTensor);
