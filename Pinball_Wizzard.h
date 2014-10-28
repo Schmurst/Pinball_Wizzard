@@ -10,7 +10,6 @@
 #include "Pinball.h"
 #include "Flipper.h"
 #include "Cylinder3D.h"
-#include "CollisionCalcs.h"
 
 namespace octet {
   namespace pinball {
@@ -37,6 +36,8 @@ namespace octet {
       Pinball pinball;
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
       int flipperCoolDown = 15; // frames between flips
+
+
 
     public:
       /// this is called when we construct the class before everything is initialised.
@@ -92,27 +93,31 @@ namespace octet {
 
         // part list, taken from collada file, very important to keep uptodate
         dynarray <string> table_parts;
-        table_parts.push_back("Table");
-        table_parts.push_back("BarrierLeft");
-        table_parts.push_back("BarrierRight");
-        table_parts.push_back("BarrierTop");
-        table_parts.push_back("Bumper001");
-        table_parts.push_back("Bumper002");
-        table_parts.push_back("Bumper003");
-        table_parts.push_back("Bumper004");
-        table_parts.push_back("Bumper005");
-        table_parts.push_back("Bumper006");
-        table_parts.push_back("BumperLeft");
-        table_parts.push_back("BumperRight");
-        table_parts.push_back("BumperEyeLeft");
-        table_parts.push_back("BumperEyeRight");
-        table_parts.push_back("EyeBrowLeft");
-        table_parts.push_back("EyeBrowRight");
-        table_parts.push_back("Reflector");
-        table_parts.push_back("Guide");
-        table_parts.push_back("Launcher");
-        table_parts.push_back("BumperMouth");
-        table_parts.push_back("Glass");
+        table_parts.push_back("Table");         // 0
+        table_parts.push_back("BarrierLeft");   // 1
+        table_parts.push_back("BarrierRight");  // 2
+        table_parts.push_back("BarrierTop");    // 3
+        table_parts.push_back("Bumper001");     // 4
+        table_parts.push_back("Bumper002");     // 5
+        table_parts.push_back("Bumper003");     // 6
+        table_parts.push_back("Bumper004");     // 7
+        table_parts.push_back("Bumper005");     // 8
+        table_parts.push_back("Bumper006");     // 9
+        table_parts.push_back("BumperLeft");    // 10
+        table_parts.push_back("BumperRight");   // 11
+        table_parts.push_back("BumperEyeLeft"); // 12
+        table_parts.push_back("BumperEyeRight");// 13
+        table_parts.push_back("EyeBrowLeft");   // 14
+        table_parts.push_back("EyeBrowRight");  // 15
+        table_parts.push_back("Reflector");     // 16
+        table_parts.push_back("Guide");         // 17
+        table_parts.push_back("Launcher");      // 18
+        table_parts.push_back("BumperMouth");   // 19
+        table_parts.push_back("Glass");         // 20
+
+        // Right FLipper                        // 21
+        // Left Flipper                         // 22
+        // Pinball                              // 23
 
         // temporary material for table
         material *table_mat = new material(new image("assets/nebula.gif"));
@@ -320,6 +325,16 @@ namespace octet {
         get_viewport_size(vx, vy);
         app_scene->begin_render(vx, vy);
 
+        // collision handler
+        int numManifolds = world->getDispatcher()->getNumManifolds();
+        for (int i = 0; i<numManifolds; i++)
+        {
+          btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
+          int objA = contactManifold->getBody0()->getUserIndex();
+          int objB = contactManifold->getBody1()->getUserIndex();
+          printf("%d - %d\n", objA, objB);
+        }
+
         world->stepSimulation(1.0f / 60);
         for (unsigned i = 0; i != rigid_bodies.size(); ++i) {
           btRigidBody *rigid_body = rigid_bodies[i];
@@ -329,6 +344,7 @@ namespace octet {
           mat4t modelToWorld = q;
           modelToWorld[3] = vec4(pos[0], pos[1], pos[2], 1);
           nodes[i]->access_nodeToParent() = modelToWorld;
+          rigid_bodies[i]->setUserIndex(i);
         }
 
         // decrement flippers
