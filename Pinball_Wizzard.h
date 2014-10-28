@@ -88,19 +88,19 @@ namespace octet {
         pinball.getRigidBody()->setDamping(0.05f, 0.05f);
 
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
-        float torqueImpluse = 300.0f;
+        float torqueImpluse = 250.0f;
         float initialOffset = 10.0f;
         float halfheightFlipper = 0.4f;
         float halfwidthFlipper = 0.1f;
-        float halflengthFlipper = 1.2f;
+        float halflengthFlipper = 1.0f;
         float massFlipper = 8.0f;
         float flipperRestitution = 0.8f;
         material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
-        btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, 0);
-        btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, 0);
-        btVector3 tableOffsetR = btVector3(1.0f, -11.5f, 1.0f);
-        btVector3 tableOffsetL = btVector3(-4.0f, -11.5f, 1.0f);
+        btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, halfheightFlipper * -1.2f);
+        btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, halfheightFlipper * -1.2f);
+        btVector3 tableOffsetR = btVector3( 0.6f, -11.3f, 0.4f);
+        btVector3 tableOffsetL = btVector3(-3.6f, -11.3f, 0.4f);
         vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 
         // add right flipper to the scene
@@ -327,6 +327,7 @@ namespace octet {
 
         // collision handler
         int numManifolds = world->getDispatcher()->getNumManifolds();
+        printf("------new physics step--------\n");
         for (int i = 0; i<numManifolds; i++)
         {
           btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
