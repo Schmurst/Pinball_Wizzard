@@ -10,6 +10,7 @@
 #include "Pinball.h"
 #include "Flipper.h"
 #include "Cylinder3D.h"
+#include "CollisionCalcs.h"
 
 namespace octet {
   namespace pinball {
