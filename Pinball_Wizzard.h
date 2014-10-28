@@ -30,6 +30,7 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
+
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
       Pinball pinball;
