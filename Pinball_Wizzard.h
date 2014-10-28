@@ -316,6 +316,7 @@ namespace octet {
         pinball.init_sphere(modelToWorld, 0.4f, sphere_mat, 1.0f);
         pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
         pinball.getRigidBody()->setRestitution(pinballRestitution);
+        pinball.getRigidBody()->setDamping(0.05f, 0.05f);
       }
 
       /// this is called to draw the world

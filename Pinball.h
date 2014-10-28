@@ -69,7 +69,6 @@ namespace octet {
         trans = btTransform(get_btMatrix3x3(matrix), get_btVector3(vec));
         rigidbody->setWorldTransform(trans);
         rigidbody->setLinearVelocity(get_btVector3(vec3(0, 0, 0)));
-
       }
 
     };
