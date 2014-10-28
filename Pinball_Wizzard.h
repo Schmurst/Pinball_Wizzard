@@ -76,6 +76,49 @@ namespace octet {
         light_node->translate(vec3(20, 0, 20));
         app_scene->add_light_instance(new light_instance(light_node, light_fill));
 
+        ////////////////////////////////////////////////// Pinball ///////////////////////////////////////////
+        // Add the pinball to the world
+        material *sphere_mat = new material(new image("assets/earth.gif"));
+        float pinballRestitution = 1.0f;
+        modelToWorld.loadIdentity();
+        modelToWorld.translate(0.7f, 6.0f, -2.0f);
+        pinball.init_sphere(modelToWorld, 0.4f, sphere_mat, 1.0f);
+        pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
+        pinball.getRigidBody()->setRestitution(pinballRestitution);
+        pinball.getRigidBody()->setDamping(0.05f, 0.05f);
+
+        ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
+        float torqueImpluse = 300.0f;
+        float initialOffset = 10.0f;
+        float halfheightFlipper = 0.4f;
+        float halfwidthFlipper = 0.1f;
+        float halflengthFlipper = 1.2f;
+        float massFlipper = 8.0f;
+        float flipperRestitution = 0.8f;
+        material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
+
+        btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, 0);
+        btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, 0);
+        btVector3 tableOffsetR = btVector3(1.0f, -11.5f, 1.0f);
+        btVector3 tableOffsetL = btVector3(-4.0f, -11.5f, 1.0f);
+        vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
+
+        // add right flipper to the scene
+        modelToWorld.loadIdentity();
+        modelToWorld.translate(initialOffset, initialOffset, initialOffset);  // to make the flipper fly in from off the screen
+        modelToWorld.rotateX(-30.0f);
+        flipperR.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, -1.0f) * torqueImpluse, massFlipper);
+        flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
+        flipperR.getRigidBody()->setRestitution(flipperRestitution);
+
+        // add left flipper to the scene
+        modelToWorld.loadIdentity();
+        modelToWorld.translate(-initialOffset, initialOffset, initialOffset);  // to make the flipper fly in from off the screen
+        modelToWorld.rotateX(-30.0f);
+        flipperL.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, 1.0f) * torqueImpluse, massFlipper); // x: 100 y: 20 z: 20
+        flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
+        flipperL.getRigidBody()->setRestitution(flipperRestitution);
+
         ////////////////////////////////////////////////// Collada import ///////////////////////////////////////////
         // create dictionary & collada builder
         resource_dict dict;
@@ -93,33 +136,29 @@ namespace octet {
 
         // part list, taken from collada file, very important to keep uptodate
         dynarray <string> table_parts;
-        table_parts.push_back("Table");         // 0
-        table_parts.push_back("BarrierLeft");   // 1
-        table_parts.push_back("BarrierRight");  // 2
-        table_parts.push_back("BarrierTop");    // 3
-        table_parts.push_back("Bumper001");     // 4
-        table_parts.push_back("Bumper002");     // 5
-        table_parts.push_back("Bumper003");     // 6
-        table_parts.push_back("Bumper004");     // 7
-        table_parts.push_back("Bumper005");     // 8
-        table_parts.push_back("Bumper006");     // 9
-        table_parts.push_back("BumperLeft");    // 10
-        table_parts.push_back("BumperRight");   // 11
-        table_parts.push_back("BumperEyeLeft"); // 12
-        table_parts.push_back("BumperEyeRight");// 13
-        table_parts.push_back("EyeBrowLeft");   // 14
-        table_parts.push_back("EyeBrowRight");  // 15
-        table_parts.push_back("Reflector");     // 16
-        table_parts.push_back("Guide");         // 17
-        table_parts.push_back("Launcher");      // 18
-        table_parts.push_back("BumperMouth");   // 19
-        table_parts.push_back("Glass");         // 20
+        table_parts.push_back("Table");         
+        table_parts.push_back("BarrierLeft");   
+        table_parts.push_back("BarrierRight");  
+        table_parts.push_back("BarrierTop");    
+        table_parts.push_back("Bumper001");     
+        table_parts.push_back("Bumper002");     
+        table_parts.push_back("Bumper003");     
+        table_parts.push_back("Bumper004");     
+        table_parts.push_back("Bumper005");     
+        table_parts.push_back("Bumper006");     
+        table_parts.push_back("BumperLeft");    
+        table_parts.push_back("BumperRight");   
+        table_parts.push_back("BumperEyeLeft"); 
+        table_parts.push_back("BumperEyeRight");
+        table_parts.push_back("EyeBrowLeft");   
+        table_parts.push_back("EyeBrowRight");  
+        table_parts.push_back("Reflector");     
+        table_parts.push_back("Guide");         
+        table_parts.push_back("Launcher");      
+        table_parts.push_back("BumperMouth");   
+        table_parts.push_back("Glass");         
 
-        // Right FLipper                        // 21
-        // Left Flipper                         // 22
-        // Pinball                              // 23
-
-        // temporary material for table
+        // Materials
         material *table_mat = new material(new image("assets/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
@@ -256,40 +295,10 @@ namespace octet {
 
         }
 
-        ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
-        float torqueImpluse = 300.0f;
-        float initialOffset = 10.0f;
-        float halfheightFlipper = 0.4f;
-        float halfwidthFlipper = 0.1f;
-        float halflengthFlipper = 1.2f;
-        float massFlipper = 8.0f;
-        float flipperRestitution = 0.8f;
-        material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
-
-        btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f , 0, 0);
-        btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, 0);
-        btVector3 tableOffsetR = btVector3(1.0f, -11.5f, 1.0f);
-        btVector3 tableOffsetL = btVector3(-4.0f, -11.5f, 1.0f);
-        vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
-
-        // add right flipper to the scene
-        modelToWorld.loadIdentity();
-        modelToWorld.translate(initialOffset, initialOffset, initialOffset);  // to make the flipper fly in from off the screen
-        modelToWorld.rotateX(-30.0f);
-        flipperR.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, -1.0f) * torqueImpluse, massFlipper);
-        flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
-        flipperR.getRigidBody()->setRestitution(flipperRestitution);
-
-        // add left flipper to the scene
-        modelToWorld.loadIdentity();
-        modelToWorld.translate(-initialOffset, initialOffset, initialOffset);  // to make the flipper fly in from off the screen
-        modelToWorld.rotateX(-30.0f);
-        flipperL.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, 1.0f) * torqueImpluse, massFlipper); // x: 100 y: 20 z: 20
-        flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
-        flipperL.getRigidBody()->setRestitution(flipperRestitution);
-
+        ///////////////////////////////////// Hinge Constraints ///////////////////////////////
+        // Load the Hinge Constraints
         // get central table rigid body from rigidbodies dynarray
-        btRigidBody *table = rigid_bodies[0];
+        btRigidBody *table = rigid_bodies[3];
 
         // Add a constraint between flipper and table
         btHingeConstraint *hingeFlipperRight = new btHingeConstraint( (*table), (*flipperR.getRigidBody()),
@@ -307,16 +316,6 @@ namespace octet {
         world->addConstraint(hingeFlipperLeft);
         world->addConstraint(hingeFlipperRight);
 
-        ////////////////////////////////////////////////// Pinball ///////////////////////////////////////////
-        // Add the pinball to the world
-        material *sphere_mat = new material(new image("assets/earth.gif"));
-        float pinballRestitution = 1.0f;
-        modelToWorld.loadIdentity();
-        modelToWorld.translate(0.7f, 6.0f, -2.0f);
-        pinball.init_sphere(modelToWorld, 0.4f, sphere_mat, 1.0f);
-        pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
-        pinball.getRigidBody()->setRestitution(pinballRestitution);
-        pinball.getRigidBody()->setDamping(0.05f, 0.05f);
       }
 
       /// this is called to draw the world
