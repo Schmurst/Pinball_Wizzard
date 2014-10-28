@@ -110,6 +110,7 @@ namespace octet {
         table_parts.push_back("Guide");
         table_parts.push_back("Launcher");
         table_parts.push_back("BumperMouth");
+        table_parts.push_back("Glass");
 
         // temporary material for table
         material *table_mat = new material(new image("assets/nebula.gif"));
@@ -224,7 +225,12 @@ namespace octet {
           btTransform partTransform = btTransform(matrix, pos);
           btRigidBody *rigidbody = table_boxes[i]->getRigidBody();
           rigidbody->setWorldTransform(tableTransform * partTransform);
-          table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
+          if (table_parts[i].find("Glass") == -1) {
+            table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
+          }
+          else {
+            table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, false, false);
+          }
         }
 
         // this code will loop throught the rigidbodies and set the right restitution for the parts

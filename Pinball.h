@@ -64,12 +64,15 @@ namespace octet {
       /// Moves Pinball to position within world
       void reset() {
         float x = seed->get(8.0f, 10.0f);
-        vec = vec3(x, 4.0f, 5.0f);
+        vec = vec3(x, 1.0f, 1.0f);
         printf("Randomx: %f\n", x);
         trans = btTransform(get_btMatrix3x3(matrix), get_btVector3(vec));
         rigidbody->setWorldTransform(trans);
         rigidbody->setLinearVelocity(get_btVector3(vec3(0, 0, 0)));
+
       }
+
+
     };
 
 
