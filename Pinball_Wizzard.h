@@ -30,6 +30,8 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
+ 
+
 
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
@@ -136,7 +138,7 @@ namespace octet {
 
         // part list, taken from collada file, very important to keep uptodate
         dynarray <string> table_parts;
-        table_parts.push_back("Table");         
+        table_parts.push_back("Table");       
         table_parts.push_back("BarrierLeft");   
         table_parts.push_back("BarrierRight");  
         table_parts.push_back("BarrierTop");    
@@ -327,13 +329,15 @@ namespace octet {
 
         // collision handler
         int numManifolds = world->getDispatcher()->getNumManifolds();
-        printf("------new physics step--------\n");
+        // printf("------new physics step--------\n");
         for (int i = 0; i<numManifolds; i++)
         {
           btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
           int objA = contactManifold->getBody0()->getUserIndex();
           int objB = contactManifold->getBody1()->getUserIndex();
-          printf("%d - %d\n", objA, objB);
+          if (objA == 0 || objB == 0) {
+            printf("The pinball has hit something\n");
+          }
         }
 
         world->stepSimulation(1.0f / 60);
