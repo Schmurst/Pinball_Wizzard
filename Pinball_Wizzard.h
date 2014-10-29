@@ -41,7 +41,7 @@ namespace octet {
       Flipper flipperR, flipperL;
       Pinball pinball;
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
-      int soundBangDelay = 0;
+      int soundBangDelay = 0, speedUpdateDelay = 0;
       int flipperCoolDown = 15; // frames between flips
 
     public:
@@ -159,8 +159,7 @@ namespace octet {
         table_parts.push_back("BumperEyeRight");
         table_parts.push_back("EyeBrowLeft");   
         table_parts.push_back("EyeBrowRight");  
-        table_parts.push_back("BarrierReflector");     
-        table_parts.push_back("BarrierGuide");         
+        table_parts.push_back("BarrierReflector");             
         table_parts.push_back("BumperLauncher");      
         table_parts.push_back("BumperMouth");   
         table_parts.push_back("Glass");         
@@ -232,7 +231,11 @@ namespace octet {
             float radii, height;
             radii = size[0];
             height = size[2];
-            if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth") != -1) {
+            if (table_parts[i].find("Launcher") != -1) {
+              table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
+              table_boxes[i]->getRigidBody()->setUserIndex(BARRIER);
+            }
+            else if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth") != -1) {
               table_boxes.push_back(new Cylinder3D(node_part, radii, height, wizzard_mat, 0.0f));
               table_boxes[i]->getRigidBody()->setUserIndex(FACE);
             }
@@ -294,7 +297,7 @@ namespace octet {
           
         // this code will loop throught the rigidbodies and set the right restitution for the parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
-          if (table_parts[i].find("Barrier") != -1 || table_parts[i].find("Guide") != -1) {
+          if (table_parts[i].find("Barrier") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
           } 
 
@@ -345,6 +348,11 @@ namespace octet {
         get_viewport_size(vx, vy);
         app_scene->begin_render(vx, vy);
 
+        if (speedUpdateDelay == 0) {
+          pinball.updateSpeed();
+          speedUpdateDelay += 5;
+        }
+
         // collision handler
         int numManifolds = world->getDispatcher()->getNumManifolds();
         if (runtime_debug) printf("------new physics step--------\n");
@@ -369,14 +377,14 @@ namespace octet {
               if (soundBangDelay == 0 && pinball.isImpact()) {
                 pinball.hitBarrier();
                 pinball.isImpact();
-                soundBangDelay += 10;
+                soundBangDelay += 5;
               }
             }
           }
         }
 
         world->stepSimulation(1.0f / 60);
-        pinball.updateSpeed();
+        
         for (unsigned i = 0; i != rigid_bodies.size(); ++i) {
           btRigidBody *rigid_body = rigid_bodies[i];
           btQuaternion btq = rigid_body->getOrientation();
@@ -402,6 +410,10 @@ namespace octet {
 
         if (soundBangDelay > 0) {
           soundBangDelay--;
+        }
+
+        if (speedUpdateDelay > 0) {
+          speedUpdateDelay--;
         }
 
         // Key handlers, when pushed will flip the flippers

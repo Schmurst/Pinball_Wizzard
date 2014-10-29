@@ -27,6 +27,7 @@ namespace octet {
       unsigned current_source;    // current sound source
       unsigned int sound_barrier_check;
       float previous_speed; // used to store the previous physics step's speed (actually speed squared)
+      float speed_check;
 
     public:
       /// Pinball Constructor
@@ -56,6 +57,9 @@ namespace octet {
         bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
         alGenSources(num_sound_sources, sources);
         sound_barrier_check = 0;
+
+        // collision values
+        speed_check = 0.8f;
       }
 
       /// Adds the mesh and rigidbody of the sphere to the scene
@@ -101,7 +105,10 @@ namespace octet {
         current_speed = velocity[0] * velocity[1] * velocity[2] * velocity[0] * velocity[1] * velocity[2];
         
         acceleration = (current_speed - previous_speed) / current_speed;
-        return (acceleration >= 0.2f || acceleration <= -0.2) ? true : false;
+        printf("pinball Current Speed: %f\n", current_speed);
+        printf("pinball prev Speed: %f\n", previous_speed);
+        printf("pinball Acceleration: %f\n", acceleration);
+        return (acceleration >= speed_check || acceleration <= -speed_check) ? true : false;
       }
 
     };
