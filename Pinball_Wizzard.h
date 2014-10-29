@@ -30,6 +30,9 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
+      bool collada_debug = true;
+      bool runtime_debug = true;
+
       // create an enum used to specify certain object types for collision logic
       enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5 };
 
@@ -58,7 +61,6 @@ namespace octet {
       /// this is called once OpenGL is initialized
       void app_init() {
 
-        bool collada_debug = true;
         app_scene = new visual_scene();
         app_scene->create_default_camera_and_lights();
         app_scene->get_camera_instance(0)->get_node()->rotate(-22.0f, vec3(1.0, 0, 0));
@@ -241,6 +243,7 @@ namespace octet {
           else {
             printf("Collada mesh Object name not recognised, default Box3D loader used");
             table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(TABLE);
           }
 
           // for debug mode
@@ -325,6 +328,12 @@ namespace octet {
         world->addConstraint(hingeFlipperRight);
 
         pinball.reset();
+
+        // check what user indexes are in the scene, duplicate check
+        for (unsigned int i = 0; i < rigid_bodies.size(); i++) {
+          printf("userpointer: %i\n", rigid_bodies[i]->getUserIndex());
+        }
+
       }
 
       /// this is called to draw the world
@@ -336,14 +345,24 @@ namespace octet {
 
         // collision handler
         int numManifolds = world->getDispatcher()->getNumManifolds();
-        printf("------new physics step--------\n");
+        if (runtime_debug) printf("------new physics step--------\n");
         for (int i = 0; i<numManifolds; i++)
         {
           btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
           int objA = contactManifold->getBody0()->getUserIndex();
           int objB = contactManifold->getBody1()->getUserIndex();
-          if (objA == PINBALL || objB == 0) {
-            printf("The pinball has hit something\n");
+          // check what has hit what
+          if (objA == PINBALL || objB == PINBALL) {
+            if (runtime_debug) printf("The pinball has hit something\n");
+            if (objA == FLIPPER || objB == FLIPPER) {
+              if (runtime_debug) printf("The pinball has hit a flipper\n");
+            } 
+            else if (objA == BUMPER || objB == BUMPER) {
+              if (runtime_debug) printf("The pinball has hit a BUMPER\n");
+            }
+            else if (objA == FACE || objB == FACE) {
+              if (runtime_debug) printf("The pinball has hit the face\n");
+            }
           }
         }
 
