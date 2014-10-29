@@ -157,9 +157,9 @@ namespace octet {
         table_parts.push_back("BumperEyeRight");
         table_parts.push_back("EyeBrowLeft");   
         table_parts.push_back("EyeBrowRight");  
-        table_parts.push_back("Reflector");     
-        table_parts.push_back("Guide");         
-        table_parts.push_back("Launcher");      
+        table_parts.push_back("BarrierReflector");     
+        table_parts.push_back("BarrierGuide");         
+        table_parts.push_back("BumperLauncher");      
         table_parts.push_back("BumperMouth");   
         table_parts.push_back("Glass");         
 
@@ -353,15 +353,17 @@ namespace octet {
           int objB = contactManifold->getBody1()->getUserIndex();
           // check what has hit what
           if (objA == PINBALL || objB == PINBALL) {
-            if (runtime_debug) printf("The pinball has hit something\n");
             if (objA == FLIPPER || objB == FLIPPER) {
-              if (runtime_debug) printf("The pinball has hit a flipper\n");
+              if (runtime_debug) printf("The pinball has hit a FLIPPER\n");
             } 
             else if (objA == BUMPER || objB == BUMPER) {
               if (runtime_debug) printf("The pinball has hit a BUMPER\n");
             }
             else if (objA == FACE || objB == FACE) {
-              if (runtime_debug) printf("The pinball has hit the face\n");
+              if (runtime_debug) printf("The pinball has hit the FACE\n");
+            }
+            else if (objA == BARRIER || objB == BARRIER) {
+              if (runtime_debug) printf("The pinball has hit the FACE\n");
             }
           }
         }
