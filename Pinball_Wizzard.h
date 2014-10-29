@@ -30,6 +30,7 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
+      // debugs
       bool collada_debug = true;
       bool runtime_debug = true;
 
@@ -167,7 +168,7 @@ namespace octet {
         material *table_mat = new material(new image("assets/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
-        material *wizzard_mat = new material(vec4(0.1f, 0.1f, 0.1f, 1.0f));
+        material *wizzard_mat = new material(vec4(0.1f, 0.6f, 0.1f, 1.0f));
         material *error_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
         // put the meshes and nodes in the scene... hopefully
@@ -289,7 +290,7 @@ namespace octet {
             table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, false, false);
           }
         }
-
+          
         // this code will loop throught the rigidbodies and set the right restitution for the parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
           if (table_parts[i].find("Barrier") != -1 || table_parts[i].find("Guide") != -1) {
@@ -364,6 +365,7 @@ namespace octet {
             }
             else if (objA == BARRIER || objB == BARRIER) {
               if (runtime_debug) printf("The pinball has hit the FACE\n");
+              pinball.hitBarrier();
             }
           }
         }

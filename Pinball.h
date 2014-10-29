@@ -23,7 +23,8 @@ namespace octet {
       random *seed;
       mat4t matrix;
       vec3 vec;
-
+      ALuint bang;                // temp usage
+      unsigned current_source;    // current sound source
 
     public:
       /// Pinball Constructor
@@ -46,6 +47,12 @@ namespace octet {
 
         seed = new random();
         matrix.loadIdentity();
+
+        // Sounds
+        const ALuint num_sound_sources = 1;   // number of sound sources in scene, probably one?
+        ALuint sources[num_sound_sources]; // what is this even for?
+        bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
+        alGenSources(num_sound_sources, sources);
       }
 
       /// Adds the mesh and rigidbody of the sphere to the scene
@@ -70,6 +77,12 @@ namespace octet {
         rigidbody->setWorldTransform(trans);
         rigidbody->setLinearVelocity(get_btVector3(vec3(0, 0, 0)));
         rigidbody->setAngularVelocity(get_btVector3(vec3(0, 0, 0)));
+      }
+
+      // play sound on barrier hit
+      void hitBarrier() {
+        alSourcei(0, AL_BUFFER, bang);
+        alSourcePlay(0);
       }
 
     };
