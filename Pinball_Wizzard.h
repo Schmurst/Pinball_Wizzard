@@ -30,12 +30,14 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
+      // create an enum used to specify certain object types for collision logic
+      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5 };
+
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
       Pinball pinball;
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
       int flipperCoolDown = 15; // frames between flips
-      int indexer = 0;
 
     public:
       /// this is called when we construct the class before everything is initialised.
@@ -84,7 +86,7 @@ namespace octet {
         pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
         pinball.getRigidBody()->setRestitution(pinballRestitution);
         pinball.getRigidBody()->setDamping(0.05f, 0.05f);
-        pinball.getRigidBody()->setUserIndex(indexer++);
+        pinball.getRigidBody()->setUserIndex(PINBALL);
 
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
         float torqueImpluse = 250.0f;
@@ -109,7 +111,7 @@ namespace octet {
         flipperR.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, -1.0f) * torqueImpluse, massFlipper);
         flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
         flipperR.getRigidBody()->setRestitution(flipperRestitution);
-        flipperR.getRigidBody()->setUserIndex(indexer++);
+        flipperR.getRigidBody()->setUserIndex(FLIPPER);
 
         // add left flipper to the scene
         modelToWorld.loadIdentity();
@@ -118,7 +120,7 @@ namespace octet {
         flipperL.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, 1.0f) * torqueImpluse, massFlipper); // x: 100 y: 20 z: 20
         flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
         flipperL.getRigidBody()->setRestitution(flipperRestitution);
-        flipperL.getRigidBody()->setUserIndex(indexer++);
+        flipperL.getRigidBody()->setUserIndex(FLIPPER);
 
         ////////////////////////////////////////////////// Collada import ///////////////////////////////////////////
         // create dictionary & collada builder
@@ -212,12 +214,15 @@ namespace octet {
 
           if (table_parts[i].find("Table") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, table_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(TABLE);
           }
           else if (table_parts[i].find("Barrier") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, barrier_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(BARRIER);
           }
           else if (table_parts[i].find("Brow") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, wizzard_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(FACE);
           }
           else if (table_parts[i].find("Bumper") != -1) {
             float radii, height;
@@ -225,9 +230,11 @@ namespace octet {
             height = size[2];
             if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth") != -1) {
               table_boxes.push_back(new Cylinder3D(node_part, radii, height, wizzard_mat, 0.0f));
+              table_boxes[i]->getRigidBody()->setUserIndex(FACE);
             }
             else {
               table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
+              table_boxes[i]->getRigidBody()->setUserIndex(BUMPER);
             }
             table_boxes[i]->setMesh(mesh_part);
           }
@@ -235,8 +242,6 @@ namespace octet {
             printf("Collada mesh Object name not recognised, default Box3D loader used");
             table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
           }
-
-          table_boxes[i]->getRigidBody()->setUserIndex(indexer++);
 
           // for debug mode
           if (collada_debug) {
@@ -331,13 +336,13 @@ namespace octet {
 
         // collision handler
         int numManifolds = world->getDispatcher()->getNumManifolds();
-        // printf("------new physics step--------\n");
+        printf("------new physics step--------\n");
         for (int i = 0; i<numManifolds; i++)
         {
           btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
           int objA = contactManifold->getBody0()->getUserIndex();
           int objB = contactManifold->getBody1()->getUserIndex();
-          if (objA == 0 || objB == 0) {
+          if (objA == PINBALL || objB == 0) {
             printf("The pinball has hit something\n");
           }
         }
