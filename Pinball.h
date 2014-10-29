@@ -25,6 +25,8 @@ namespace octet {
       vec3 vec;
       ALuint bang;                // temp usage
       unsigned current_source;    // current sound source
+      unsigned int sound_barrier_check;
+      float previous_speed; // used to store the previous physics step's speed (actually speed squared)
 
     public:
       /// Pinball Constructor
@@ -53,6 +55,7 @@ namespace octet {
         ALuint sources[num_sound_sources]; // what is this even for?
         bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
         alGenSources(num_sound_sources, sources);
+        sound_barrier_check = 0;
       }
 
       /// Adds the mesh and rigidbody of the sphere to the scene
@@ -83,6 +86,22 @@ namespace octet {
       void hitBarrier() {
         alSourcei(0, AL_BUFFER, bang);
         alSourcePlay(0);
+      }
+
+      /// Sets the previous speed of the pinball, called everyphysics step
+      void updateSpeed() {
+        btVector3 velocity = rigidbody->getInterpolationLinearVelocity();
+        previous_speed = velocity[0] * velocity[1] * velocity[2] * velocity[0] * velocity[1] * velocity[2];
+      }
+
+      /// detectes whether a significant impact has been detected
+      bool isImpact() {
+        float current_speed, acceleration;
+        btVector3 velocity = rigidbody->getInterpolationLinearVelocity();
+        current_speed = velocity[0] * velocity[1] * velocity[2] * velocity[0] * velocity[1] * velocity[2];
+        
+        acceleration = (current_speed - previous_speed) / current_speed;
+        return (acceleration >= 0.2f || acceleration <= -0.2) ? true : false;
       }
 
     };

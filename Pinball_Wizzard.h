@@ -41,6 +41,7 @@ namespace octet {
       Flipper flipperR, flipperL;
       Pinball pinball;
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
+      int soundBangDelay = 0;
       int flipperCoolDown = 15; // frames between flips
 
     public:
@@ -365,12 +366,17 @@ namespace octet {
             }
             else if (objA == BARRIER || objB == BARRIER) {
               if (runtime_debug) printf("The pinball has hit the FACE\n");
-              pinball.hitBarrier();
+              if (soundBangDelay == 0 && pinball.isImpact()) {
+                pinball.hitBarrier();
+                pinball.isImpact();
+                soundBangDelay += 10;
+              }
             }
           }
         }
 
         world->stepSimulation(1.0f / 60);
+        pinball.updateSpeed();
         for (unsigned i = 0; i != rigid_bodies.size(); ++i) {
           btRigidBody *rigid_body = rigid_bodies[i];
           btQuaternion btq = rigid_body->getOrientation();
@@ -381,7 +387,7 @@ namespace octet {
           nodes[i]->access_nodeToParent() = modelToWorld;
         }
 
-        // decrement flippers
+        // decrement delays
         if (flipDelayL > 0) {
           flipDelayL--;
         }
@@ -392,6 +398,10 @@ namespace octet {
 
         if (pinballResetDelay > 0) {
           pinballResetDelay--;
+        }
+
+        if (soundBangDelay > 0) {
+          soundBangDelay--;
         }
 
         // Key handlers, when pushed will flip the flippers
