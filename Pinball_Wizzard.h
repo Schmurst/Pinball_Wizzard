@@ -30,16 +30,12 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
- 
-
-
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
       Pinball pinball;
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
       int flipperCoolDown = 15; // frames between flips
-
-
+      int indexer = 0;
 
     public:
       /// this is called when we construct the class before everything is initialised.
@@ -88,6 +84,7 @@ namespace octet {
         pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
         pinball.getRigidBody()->setRestitution(pinballRestitution);
         pinball.getRigidBody()->setDamping(0.05f, 0.05f);
+        pinball.getRigidBody()->setUserIndex(indexer++);
 
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
         float torqueImpluse = 250.0f;
@@ -112,6 +109,7 @@ namespace octet {
         flipperR.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, -1.0f) * torqueImpluse, massFlipper);
         flipperR.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
         flipperR.getRigidBody()->setRestitution(flipperRestitution);
+        flipperR.getRigidBody()->setUserIndex(indexer++);
 
         // add left flipper to the scene
         modelToWorld.loadIdentity();
@@ -120,6 +118,7 @@ namespace octet {
         flipperL.init_flipper(modelToWorld, sizeFlipper, flip_mat, vec3(0, 0, 1.0f) * torqueImpluse, massFlipper); // x: 100 y: 20 z: 20
         flipperL.add_to_scene(nodes, app_scene, (*world), rigid_bodies);
         flipperL.getRigidBody()->setRestitution(flipperRestitution);
+        flipperL.getRigidBody()->setUserIndex(indexer++);
 
         ////////////////////////////////////////////////// Collada import ///////////////////////////////////////////
         // create dictionary & collada builder
@@ -237,6 +236,8 @@ namespace octet {
             table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
           }
 
+          table_boxes[i]->getRigidBody()->setUserIndex(indexer++);
+
           // for debug mode
           if (collada_debug) {
             printf("\n --------------------------------------------------------------------");
@@ -318,6 +319,7 @@ namespace octet {
         world->addConstraint(hingeFlipperLeft);
         world->addConstraint(hingeFlipperRight);
 
+        pinball.reset();
       }
 
       /// this is called to draw the world
@@ -349,7 +351,6 @@ namespace octet {
           mat4t modelToWorld = q;
           modelToWorld[3] = vec4(pos[0], pos[1], pos[2], 1);
           nodes[i]->access_nodeToParent() = modelToWorld;
-          rigid_bodies[i]->setUserIndex(i);
         }
 
         // decrement flippers
