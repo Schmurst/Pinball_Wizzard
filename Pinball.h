@@ -19,15 +19,34 @@ namespace octet {
       float radii;
       mesh_sphere *meshSphere;
       btTransform trans;
+
       // following variables are used to impement randomness in the pinball drop
       random *seed;
       mat4t matrix;
       vec3 vec;
-      ALuint bang;                // temp usage
+
+      // used to compare speeds and collsisions
+      btScalar current_speed;
+      btScalar previous_speed; 
+      float speed_check;
+      btScalar maxSpeed;
+
+      // sounds
+      ALuint Pop;
+      ALuint Bounce;
+      ALuint Ding;
+      ALuint Welcome;
+      ALuint Drop;
+      ALuint Flip;
       unsigned current_source;    // current sound source
       unsigned int sound_barrier_check;
-      float previous_speed; // used to store the previous physics step's speed (actually speed squared)
-      float speed_check;
+      ALuint num_sound_sources = 8;
+      ALuint sources[8];    // 8 sound sources
+
+      /// returns new sound source
+      ALuint get_sound_source() {
+        return sources[current_source++ % num_sound_sources];
+      }
 
     public:
       /// Pinball Constructor
@@ -52,14 +71,19 @@ namespace octet {
         matrix.loadIdentity();
 
         // Sounds
-        const ALuint num_sound_sources = 1;   // number of sound sources in scene, probably one?
-        ALuint sources[num_sound_sources]; // what is this even for?
-        bang = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/invaderers/bang.wav");
+        current_source = 0;
+        Pop = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Pop.wav");
+        Ding = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Ding.wav");
+        Drop = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Drop.wav");
+        Bounce = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Bounce.wav");
+        Flip = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Flip.wav");
+        Welcome = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Welcome.wav");
         alGenSources(num_sound_sources, sources);
         sound_barrier_check = 0;
 
         // collision values
         speed_check = 0.8f;
+        maxSpeed = 10.0f;
       }
 
       /// Adds the mesh and rigidbody of the sphere to the scene
@@ -84,31 +108,77 @@ namespace octet {
         rigidbody->setWorldTransform(trans);
         rigidbody->setLinearVelocity(get_btVector3(vec3(0, 0, 0)));
         rigidbody->setAngularVelocity(get_btVector3(vec3(0, 0, 0)));
+        playSoundWelcome();
       }
 
-      // play sound on barrier hit
-      void hitBarrier() {
-        alSourcei(0, AL_BUFFER, bang);
-        alSourcePlay(0);
+      /// play sound on barrier hit
+      void playSoundHitBarrier() {
+        ALuint source = get_sound_source();
+        alSourcei(source, AL_BUFFER, Pop);
+        alSourcePlay(source);
+      }
+
+      /// play sound on bumper hit
+      void playSoundHitBumper() {
+        ALuint source = get_sound_source();
+        alSourcei(source, AL_BUFFER, Ding);
+        alSourcePlay(source);
+      }
+
+      /// play sound on Launcher hit
+      void playSoundHitLauncher() {
+        ALuint source = get_sound_source();
+        alSourcei(source, AL_BUFFER, Bounce);
+        alSourcePlay(source);
+      }
+
+      /// play sound on Flipper hit
+      void playSoundHitFlipper() {
+        ALuint source = get_sound_source();
+        alSourcei(source, AL_BUFFER, Flip);
+        alSourcePlay(source);
+      }
+
+      /// play sound on ball drop
+      void playSoundBallDrop() {
+        ALuint source = get_sound_source();
+        alSourcei(source, AL_BUFFER, Drop);
+        alSourcePlay(source);
+      }
+
+      /// play sound on barrier hit
+      void playSoundWelcome() {
+        ALuint source = get_sound_source();
+        alSourcei(source, AL_BUFFER, Welcome);
+        alSourcePlay(source);
+      }
+
+      /// to be called in the btPhysics update function to limit speed
+      void limitSpeed() {
+        btVector3 velocity = rigidbody->getLinearVelocity();
+        btScalar speed = velocity.length();
+        if (speed > maxSpeed) {
+          velocity *= maxSpeed / speed;
+          rigidbody->setLinearVelocity(velocity);
+        }
       }
 
       /// Sets the previous speed of the pinball, called everyphysics step
       void updateSpeed() {
         btVector3 velocity = rigidbody->getInterpolationLinearVelocity();
-        previous_speed = velocity[0] * velocity[1] * velocity[2] * velocity[0] * velocity[1] * velocity[2];
+        previous_speed = velocity.length();
       }
 
       /// detectes whether a significant impact has been detected
       bool isImpact() {
-        float current_speed, acceleration;
         btVector3 velocity = rigidbody->getInterpolationLinearVelocity();
-        current_speed = velocity[0] * velocity[1] * velocity[2] * velocity[0] * velocity[1] * velocity[2];
+        current_speed = velocity.length();
         
-        acceleration = (current_speed - previous_speed) / current_speed;
         printf("pinball Current Speed: %f\n", current_speed);
         printf("pinball prev Speed: %f\n", previous_speed);
-        printf("pinball Acceleration: %f\n", acceleration);
-        return (acceleration >= speed_check || acceleration <= -speed_check) ? true : false;
+
+        float acceleration = abs(previous_speed - current_speed);
+        return (acceleration >= speed_check) ? true : false;
       }
 
     };

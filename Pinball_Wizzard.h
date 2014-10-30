@@ -87,7 +87,7 @@ namespace octet {
         float pinballRestitution = 1.0f;
         modelToWorld.loadIdentity();
         modelToWorld.translate(0.7f, 6.0f, -2.0f);
-        pinball.init_sphere(modelToWorld, 0.4f, sphere_mat, 1.0f);
+        pinball.init_sphere(modelToWorld, 0.5f, sphere_mat, 1.0f);
         pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
         pinball.getRigidBody()->setRestitution(pinballRestitution);
         pinball.getRigidBody()->setDamping(0.05f, 0.05f);
@@ -386,8 +386,7 @@ namespace octet {
             else if (objA == BARRIER || objB == BARRIER) {
               if (runtime_debug) printf("The pinball has hit the FACE\n");
               if (soundBangDelay == 0 && pinball.isImpact()) {
-                pinball.hitBarrier();
-                pinball.isImpact();
+                pinball.playSoundHitBarrier();
                 soundBangDelay += 5;
               }
             }
@@ -395,6 +394,8 @@ namespace octet {
         }
 
         world->stepSimulation(1.0f / 30);
+
+        pinball.limitSpeed();
         
         for (unsigned i = 0; i != rigid_bodies.size(); ++i) {
           btRigidBody *rigid_body = rigid_bodies[i];
