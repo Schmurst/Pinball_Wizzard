@@ -36,7 +36,7 @@ namespace octet {
       bool runtime_debug = true;
 
       // create an enum used to specify certain object types for collision logic
-      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5, LAUNCHER = 6 };
+      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5, LAUNCHER = 6, LAMP = 7 };
 
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
@@ -163,9 +163,11 @@ namespace octet {
         table_parts.push_back("BarrierReflector");             
         table_parts.push_back("Launcher");      
         table_parts.push_back("Mouth");   
-        table_parts.push_back("Glass");         
+        table_parts.push_back("Glass");
+        // table_parts.push_back("Lamp");
 
         // Materials
+        material *lamp_mat = dict.get_material("Lamp-material");
         material *table_mat = new material(new image("assets/Pinball_Wizzard/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
@@ -247,6 +249,13 @@ namespace octet {
             table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(BUMPER);
             table_boxes[i]->setMesh(mesh_part);
+          }
+          else if (table_parts[i].find("Lamp") != -1) {
+            float radii, height;
+            radii = size[0];
+            height = size[2];
+            table_boxes.push_back(new Cylinder3D(node_part, radii, height, lamp_mat, mesh_part, 0.0));
+            table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
           }
           else {
             printf("Collada mesh Object name not recognised, default Box3D loader used");
