@@ -83,7 +83,7 @@ namespace octet {
 
         ////////////////////////////////////////////////// Pinball ///////////////////////////////////////////
         // Add the pinball to the world
-        material *sphere_mat = new material(new image("assets/Pinball_Wizzard/earth.gif"));
+        material *sphere_mat = new material(new image("assets/Pinball_Wizzard/Eye.gif"));
         float pinballRestitution = 1.0f;
         modelToWorld.loadIdentity();
         modelToWorld.translate(0.7f, 6.0f, -2.0f);
