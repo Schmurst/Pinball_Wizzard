@@ -166,10 +166,10 @@ namespace octet {
         table_parts.push_back("Mouth");   
         table_parts.push_back("Glass");
         table_parts.push_back("Circle");
-        //table_parts.push_back("Lamp");
+        table_parts.push_back("Lamp");
 
         // Materials
-        material *lamp_mat = dict.get_material("#Lamp-material");
+        material *lamp_mat = dict.get_material("Lamp-material");
         material *table_mat = new material(new image("assets/Pinball_Wizzard/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
@@ -219,6 +219,7 @@ namespace octet {
             temp += table_parts[i];
             mesh_part = dict.get_mesh(temp);
             printf("id string: %s", temp);
+            mesh_part = collada_meshes[i]->get_mesh();
           }
 
           // create axis_aligned bounding box
