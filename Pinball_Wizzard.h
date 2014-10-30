@@ -68,7 +68,7 @@ namespace octet {
         app_scene->create_default_camera_and_lights();
         app_scene->get_camera_instance(0)->get_node()->rotate(-22.0f, vec3(1.0, 0, 0));
         app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -9.5f));
-        app_scene->get_camera_instance(0)->set_perspective(0, 70, 1, 0.1f, 50.0f);
+        app_scene->get_camera_instance(0)->set_perspective(0, 70, 1, 0.1f, 1000.0f);
         world->setGravity(btVector3(0, -19.81f, 0));
         mat4t modelToWorld;
 
@@ -83,7 +83,7 @@ namespace octet {
 
         ////////////////////////////////////////////////// Pinball ///////////////////////////////////////////
         // Add the pinball to the world
-        material *sphere_mat = new material(new image("assets/earth.gif"));
+        material *sphere_mat = new material(new image("assets/Pinball_Wizzard/earth.gif"));
         float pinballRestitution = 1.0f;
         modelToWorld.loadIdentity();
         modelToWorld.translate(0.7f, 6.0f, -2.0f);
@@ -132,7 +132,7 @@ namespace octet {
         resource_dict dict;
         dynarray<resource*> collada_meshes;
         collada_builder colladaBuilder;
-        if (!colladaBuilder.load_xml("assets/PinballWizzardAssets.dae")) {
+        if (!colladaBuilder.load_xml("assets/Pinball_Wizzard/PinballWizzardAssets.dae")) {
           printf("failed to load the pinball table file");
           return;
         }
@@ -166,12 +166,12 @@ namespace octet {
         table_parts.push_back("Glass");         
 
         // Materials
-        material *table_mat = new material(new image("assets/nebula.gif"));
+        material *table_mat = new material(new image("assets/Pinball_Wizzard/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
         material *wizzard_mat = new material(vec4(0.1f, 0.6f, 0.1f, 1.0f));
         material *error_mat = new material(vec4(1.0f, 0, 0, 1.0f));
-        material *skybox_mat = new material(new image("assets/nebula.gif"));
+        material *skybox_mat = new material(new image("assets/Pinball_Wizzard/nebula.gif"));
 
         // put the meshes and nodes in the scene... hopefully
         scene_node *node_part;
@@ -340,7 +340,7 @@ namespace octet {
         // add the skybox sphere to the world no rigidbody
         modelToWorld.loadIdentity();
         scene_node *skybox_node = new scene_node(modelToWorld, atom_);
-        mesh_sphere *sphere_mesh = new mesh_sphere(vec3(0), 30.0f);
+        mesh_sphere *sphere_mesh = new mesh_sphere(vec3(0), 100.0f);
         nodes.push_back(skybox_node);
         app_scene->add_mesh_instance(new mesh_instance(skybox_node, sphere_mesh, skybox_mat));
 
