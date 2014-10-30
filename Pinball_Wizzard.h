@@ -33,7 +33,7 @@ namespace octet {
 
       // debugs
       bool collada_debug = true;
-      bool runtime_debug = false;
+      bool runtime_debug = true;
 
       // create an enum used to specify certain object types for collision logic
       enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5, LAUNCHER = 6 };
@@ -228,7 +228,7 @@ namespace octet {
             table_boxes.push_back(new Box3D(node_part, size, wizzard_mat, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(FACE);
           }
-          else if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth")) {
+          else if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth") != -1) {
             float radii, height;
             radii = size[0];
             height = size[2];
@@ -424,6 +424,8 @@ namespace octet {
         if (soundPopDelay > 0) soundPopDelay--;
 
         if (speedUpdateDelay > 0) speedUpdateDelay--;
+
+        if (soundDingDelay > 0) soundDingDelay--;
 
         // Key handlers, when pushed will flip the flippers
         if (is_key_down('Z') && flipDelayR == 0) {
