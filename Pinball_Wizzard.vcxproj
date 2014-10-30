@@ -223,6 +223,7 @@
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="Pinball.h" />
     <ClInclude Include="Table.h" />
+    <ClInclude Include="XboxController.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resources\mesh_builder.inl" />
