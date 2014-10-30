@@ -42,7 +42,7 @@ namespace octet {
       Flipper flipperR, flipperL;
       Pinball pinball;
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
-      int soundBangDelay = 0, speedUpdateDelay = 0;
+      int soundPopDelay = 0, speedUpdateDelay = 0, soundDingDelay = 0;
       int flipperCoolDown = 15; // frames between flips
 
     public:
@@ -372,6 +372,7 @@ namespace octet {
           btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
           int objA = contactManifold->getBody0()->getUserIndex();
           int objB = contactManifold->getBody1()->getUserIndex();
+
           // check what has hit what
           if (objA == PINBALL || objB == PINBALL) {
             if (objA == FLIPPER || objB == FLIPPER) {
@@ -379,15 +380,19 @@ namespace octet {
             } 
             else if (objA == BUMPER || objB == BUMPER) {
               if (runtime_debug) printf("The pinball has hit a BUMPER\n");
+              if (soundDingDelay == 0 && pinball.isImpact()) {
+                pinball.playSoundHitBumper();
+                soundDingDelay += 5;
+              }
             }
             else if (objA == FACE || objB == FACE) {
               if (runtime_debug) printf("The pinball has hit the FACE\n");
             }
             else if (objA == BARRIER || objB == BARRIER) {
               if (runtime_debug) printf("The pinball has hit the FACE\n");
-              if (soundBangDelay == 0 && pinball.isImpact()) {
+              if (soundPopDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBarrier();
-                soundBangDelay += 5;
+                soundPopDelay += 5;
               }
             }
           }
@@ -408,35 +413,27 @@ namespace octet {
         }
 
         // decrement delays
-        if (flipDelayL > 0) {
-          flipDelayL--;
-        }
+        if (flipDelayL > 0) flipDelayL--;
 
-        if (flipDelayR > 0) {
-          flipDelayR--;
-        }
+        if (flipDelayR > 0) flipDelayR--;
 
-        if (pinballResetDelay > 0) {
-          pinballResetDelay--;
-        }
+        if (pinballResetDelay > 0) pinballResetDelay--;
 
-        if (soundBangDelay > 0) {
-          soundBangDelay--;
-        }
+        if (soundPopDelay > 0) soundPopDelay--;
 
-        if (speedUpdateDelay > 0) {
-          speedUpdateDelay--;
-        }
+        if (speedUpdateDelay > 0) speedUpdateDelay--;
 
         // Key handlers, when pushed will flip the flippers
         if (is_key_down('Z') && flipDelayR == 0) {
           flipperL.flip();
           flipDelayR = flipperCoolDown;
+          pinball.playSoundHitFlipper();
         }
 
         if (is_key_down('M') && flipDelayL == 0) {
           flipperR.flip();
           flipDelayL = flipperCoolDown;
+          pinball.playSoundHitFlipper();
         }
 
         if (is_key_down(' ') && pinballResetDelay == 0) {

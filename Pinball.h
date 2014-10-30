@@ -40,8 +40,8 @@ namespace octet {
       ALuint Flip;
       unsigned current_source;    // current sound source
       unsigned int sound_barrier_check;
-      ALuint num_sound_sources = 8;
-      ALuint sources[8];    // 8 sound sources
+      ALuint num_sound_sources = 32;
+      ALuint sources[32];    // 32 sound sources
 
       /// returns new sound source
       ALuint get_sound_source() {
@@ -82,8 +82,8 @@ namespace octet {
         sound_barrier_check = 0;
 
         // collision values
-        speed_check = 0.8f;
-        maxSpeed = 10.0f;
+        speed_check = 0.4f;
+        maxSpeed = 50.0f;
       }
 
       /// Adds the mesh and rigidbody of the sphere to the scene
