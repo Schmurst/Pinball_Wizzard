@@ -10,6 +10,7 @@
 #include "Pinball.h"
 #include "Flipper.h"
 #include "Cylinder3D.h"
+#include <Xinput.h>
 
 namespace octet {
   namespace pinball {
@@ -170,6 +171,7 @@ namespace octet {
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
         material *wizzard_mat = new material(vec4(0.1f, 0.6f, 0.1f, 1.0f));
         material *error_mat = new material(vec4(1.0f, 0, 0, 1.0f));
+        material *skybox_mat = new material(new image("assets/nebula.gif"));
 
         // put the meshes and nodes in the scene... hopefully
         scene_node *node_part;
@@ -332,7 +334,15 @@ namespace octet {
         world->addConstraint(hingeFlipperLeft);
         world->addConstraint(hingeFlipperRight);
 
+        // reset the pinball
         pinball.reset();
+
+        // add the skybox sphere to the world no rigidbody
+        modelToWorld.loadIdentity();
+        scene_node *skybox_node = new scene_node(modelToWorld, atom_);
+        mesh_sphere *sphere_mesh = new mesh_sphere(vec3(0), 30.0f);
+        nodes.push_back(skybox_node);
+        app_scene->add_mesh_instance(new mesh_instance(skybox_node, sphere_mesh, skybox_mat));
 
         // check what user indexes are in the scene, duplicate check
         for (unsigned int i = 0; i < rigid_bodies.size(); i++) {
@@ -383,7 +393,7 @@ namespace octet {
           }
         }
 
-        world->stepSimulation(1.0f / 60);
+        world->stepSimulation(1.0f / 30);
         
         for (unsigned i = 0; i != rigid_bodies.size(); ++i) {
           btRigidBody *rigid_body = rigid_bodies[i];
