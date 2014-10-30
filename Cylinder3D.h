@@ -38,8 +38,8 @@ namespace octet {
 
       /// Cylinder 5 arg constructor for passing an overriding mesh
       Cylinder3D(scene_node *node, float rad, float half_height, material *cylinder_material, mesh *mesh, float cylinder_mass = 1.0f) {
+        colladaMesh = mesh;
         modelToWorld = node->access_nodeToParent();
-        setMesh(mesh);
         init_cylinder(modelToWorld, rad, half_height, cylinder_material, cylinder_mass);
       }
 

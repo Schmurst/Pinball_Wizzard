@@ -11,6 +11,7 @@
 #include "Flipper.h"
 #include "Cylinder3D.h"
 #include <Xinput.h>
+#include "XboxController.h"
 
 namespace octet {
   namespace pinball {
@@ -33,7 +34,7 @@ namespace octet {
 
       // debugs
       bool collada_debug = true;
-      bool runtime_debug = true;
+      bool runtime_debug = false;
 
       // create an enum used to specify certain object types for collision logic
       enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5, LAUNCHER = 6, LAMP = 7 };
@@ -164,10 +165,11 @@ namespace octet {
         table_parts.push_back("Launcher");      
         table_parts.push_back("Mouth");   
         table_parts.push_back("Glass");
-        // table_parts.push_back("Lamp");
+        table_parts.push_back("Circle");
+        //table_parts.push_back("Lamp");
 
         // Materials
-        material *lamp_mat = dict.get_material("Lamp-material");
+        material *lamp_mat = dict.get_material("#Lamp-material");
         material *table_mat = new material(new image("assets/Pinball_Wizzard/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
@@ -210,6 +212,15 @@ namespace octet {
           table_parts[i] += "-mesh";
           mesh_part = dict.get_mesh(table_parts[i]);
 
+          // if the above method finding the string fails attempt adding a # infront
+          // this is done by collada when the mesh has a material attached to it
+          if (mesh_part == nullptr) {
+            string temp = "#";
+            temp += table_parts[i];
+            mesh_part = dict.get_mesh(temp);
+            printf("id string: %s", temp);
+          }
+
           // create axis_aligned bounding box
           aabb aabb_part = mesh_part->get_aabb();
           // initialise bt box shape, using centre + halfextents (absolute to avoid stange errors)
@@ -250,12 +261,13 @@ namespace octet {
             table_boxes[i]->getRigidBody()->setUserIndex(BUMPER);
             table_boxes[i]->setMesh(mesh_part);
           }
-          else if (table_parts[i].find("Lamp") != -1) {
+          else if (table_parts[i].find("Lamp") != -1 || table_parts[i].find("Circle") != -1) {
             float radii, height;
             radii = size[0];
             height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, radii, height, lamp_mat, mesh_part, 0.0));
+            table_boxes.push_back(new Cylinder3D(node_part, radii, height, wizzard_mat, mesh_part, 0.0));
             table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
+            table_boxes[i]->setMesh(mesh_part);
           }
           else {
             printf("Collada mesh Object name not recognised, default Box3D loader used");
@@ -361,6 +373,10 @@ namespace octet {
           printf("userpointer: %i\n", rigid_bodies[i]->getUserIndex());
         }
 
+        ///////////////////////////////////// XBOX Pad ///////////////////////////////
+        // create an xbox controller object
+        //XboxController xboxPad;
+        //xboxPad.getState() ? printf("The Xbox pad is plugged in") : printf("The Xbox pad is NOT plugged in");
       }
 
       /// this is called to draw the world
