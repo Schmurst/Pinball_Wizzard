@@ -33,10 +33,10 @@ namespace octet {
 
       // debugs
       bool collada_debug = true;
-      bool runtime_debug = true;
+      bool runtime_debug = false;
 
       // create an enum used to specify certain object types for collision logic
-      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5 };
+      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5, LAUNCHER = 6 };
 
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
@@ -69,7 +69,7 @@ namespace octet {
         app_scene->get_camera_instance(0)->get_node()->rotate(-22.0f, vec3(1.0, 0, 0));
         app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -9.5f));
         app_scene->get_camera_instance(0)->set_perspective(0, 70, 1, 0.1f, 1000.0f);
-        world->setGravity(btVector3(0, -19.81f, 0));
+        world->setGravity(btVector3(0, -30.0f, 0));
         mat4t modelToWorld;
 
         // Add a a fill light to the scene and create camera instance
@@ -156,13 +156,13 @@ namespace octet {
         table_parts.push_back("Bumper006");     
         table_parts.push_back("BumperLeft");    
         table_parts.push_back("BumperRight");   
-        table_parts.push_back("BumperEyeLeft"); 
-        table_parts.push_back("BumperEyeRight");
-        table_parts.push_back("EyeBrowLeft");   
-        table_parts.push_back("EyeBrowRight");  
+        table_parts.push_back("EyeLeft"); 
+        table_parts.push_back("EyeRight");
+        table_parts.push_back("BrowLeft");   
+        table_parts.push_back("BrowRight");  
         table_parts.push_back("BarrierReflector");             
-        table_parts.push_back("BumperLauncher");      
-        table_parts.push_back("BumperMouth");   
+        table_parts.push_back("Launcher");      
+        table_parts.push_back("Mouth");   
         table_parts.push_back("Glass");         
 
         // Materials
@@ -228,22 +228,24 @@ namespace octet {
             table_boxes.push_back(new Box3D(node_part, size, wizzard_mat, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(FACE);
           }
+          else if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth")) {
+            float radii, height;
+            radii = size[0];
+            height = size[2];
+            table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(FACE);
+            table_boxes[i]->setMesh(mesh_part);
+          }
+          else if (table_parts[i].find("Launcher") != -1) {
+            table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(LAUNCHER);
+          }
           else if (table_parts[i].find("Bumper") != -1) {
             float radii, height;
             radii = size[0];
             height = size[2];
-            if (table_parts[i].find("Launcher") != -1) {
-              table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
-              table_boxes[i]->getRigidBody()->setUserIndex(BARRIER);
-            }
-            else if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth") != -1) {
-              table_boxes.push_back(new Cylinder3D(node_part, radii, height, wizzard_mat, 0.0f));
-              table_boxes[i]->getRigidBody()->setUserIndex(FACE);
-            }
-            else {
-              table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
-              table_boxes[i]->getRigidBody()->setUserIndex(BUMPER);
-            }
+            table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(BUMPER);
             table_boxes[i]->setMesh(mesh_part);
           }
           else {

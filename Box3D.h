@@ -59,7 +59,6 @@ namespace octet {
         btWorld.addRigidBody(rigidbody);
         rigidBodies.push_back(rigidbody);
         sceneNodes.push_back(node);
-        printf("Box3D added to scene\n");
         // below is inefficient, as it still creates the box
         if (is_visible && colladaMesh == nullptr) {
           appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));

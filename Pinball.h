@@ -82,7 +82,7 @@ namespace octet {
         sound_barrier_check = 0;
 
         // collision values
-        speed_check = 0.4f;
+        speed_check = 0.8f;
         maxSpeed = 50.0f;
       }
 
@@ -174,8 +174,8 @@ namespace octet {
         btVector3 velocity = rigidbody->getInterpolationLinearVelocity();
         current_speed = velocity.length();
         
-        printf("pinball Current Speed: %f\n", current_speed);
-        printf("pinball prev Speed: %f\n", previous_speed);
+        //printf("pinball Current Speed: %f\n", current_speed);
+        //printf("pinball prev Speed: %f\n", previous_speed);
 
         float acceleration = abs(previous_speed - current_speed);
         return (acceleration >= speed_check) ? true : false;
