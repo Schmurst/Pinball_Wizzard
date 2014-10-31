@@ -37,7 +37,7 @@ namespace octet {
       bool runtime_debug = true;
 
       // create an enum used to specify certain object types for collision logic
-      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5, LAUNCHER = 6, LAMP = 7 };
+      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, FACE = 4, LAUNCHER = 5, LAMP = 6 };
 
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
@@ -132,7 +132,7 @@ namespace octet {
         // create dictionary & collada builder
         resource_dict dict;
         dynarray<resource*> collada_meshes;
-        dynarray<resource*> collada_mats;
+        dynarray<resource*> collada_materials;
         collada_builder colladaBuilder;
         if (!colladaBuilder.load_xml("assets/Pinball_Wizzard/PinballWizzardAssets.dae")) {
           printf("failed to load the pinball table file");
@@ -142,8 +142,9 @@ namespace octet {
         // get meshes and their respective nodes from dictionary
         colladaBuilder.get_resources(dict);
         dict.find_all(collada_meshes, atom_mesh);
-        dict.find_all(collada_mats, atom_material);
+        dict.find_all(collada_materials, atom_material);
         printf("collada_meshes size: %i\n", collada_meshes.size());
+        printf("collada_materials size: %i\n", collada_materials.size());
 
         // part list, taken from collada file, very important to keep uptodate
         dynarray <string> table_parts;
@@ -151,14 +152,17 @@ namespace octet {
         table_parts.push_back("BarrierLeft");   
         table_parts.push_back("BarrierRight");  
         table_parts.push_back("BarrierTop");    
-        table_parts.push_back("Bumper001");     
-        table_parts.push_back("Bumper002");     
-        table_parts.push_back("Bumper003");     
-        table_parts.push_back("Bumper004");     
-        table_parts.push_back("Bumper005");     
-        table_parts.push_back("Bumper006");     
-        table_parts.push_back("BumperLeft");    
-        table_parts.push_back("BumperRight");   
+        table_parts.push_back("Lamp001");
+        table_parts.push_back("Lamp002");
+        table_parts.push_back("Lamp003");
+        table_parts.push_back("Lamp004");
+        table_parts.push_back("Lamp005");
+        table_parts.push_back("Lamp006");
+        table_parts.push_back("Lamp007");
+        table_parts.push_back("Lamp008");
+        table_parts.push_back("Lamp009");
+        table_parts.push_back("LampLeft");
+        table_parts.push_back("LampRight");
         table_parts.push_back("EyeLeft"); 
         table_parts.push_back("EyeRight");
         table_parts.push_back("BrowLeft");   
@@ -167,12 +171,13 @@ namespace octet {
         table_parts.push_back("Launcher");      
         table_parts.push_back("Mouth");   
         table_parts.push_back("Glass");
-        table_parts.push_back("Circle");
-        table_parts.push_back("zLamp");
 
         // Materials
-        material *lamp_mat = collada_mats[0]->get_material();
-        material *table_mat = new material(new image("assets/Pinball_Wizzard/nebula.gif"));
+        material *lamp_mat = new material(new image("assets/Pinball_Wizzard/LampTexture.gif"));
+        if (lamp_mat == nullptr) {
+          lamp_mat = collada_materials[0]->get_material();
+        }
+        material *table_mat = new material(new image("assets/Pinball_Wizzard/BookTexture.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
         material *wizzard_mat = new material(vec4(0.1f, 0.6f, 0.1f, 1.0f));
@@ -216,6 +221,12 @@ namespace octet {
 
           // if the above method finding the string fails attempt adding a # infront
           // this is done by collada when the mesh has a material attached to it
+
+          if (mesh_part == nullptr) {
+            table_parts[i] += "+Lamp-material";
+            mesh_part = dict.get_mesh(table_parts[i]);
+          }
+
           if (mesh_part == nullptr) {
             mesh_part = collada_meshes[0]->get_mesh();
           }
@@ -252,19 +263,11 @@ namespace octet {
             table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(LAUNCHER);
           }
-          else if (table_parts[i].find("Bumper") != -1) {
+          else if (table_parts[i].find("Lamp") != -1 ) {
             float radii, height;
             radii = size[0];
             height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
-            table_boxes[i]->getRigidBody()->setUserIndex(BUMPER);
-            table_boxes[i]->setMesh(mesh_part);
-          }
-          else if (table_parts[i].find("Lamp") != -1 || table_parts[i].find("Circle") != -1) {
-            float radii, height;
-            radii = size[0];
-            height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, radii, height, lamp_mat, mesh_part, 0.0));
+            table_boxes.push_back(new Cylinder3D(node_part, radii, height, lamp_mat, 0.0));
             table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
             table_boxes[i]->setMesh(mesh_part);
           }
@@ -325,7 +328,7 @@ namespace octet {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
           } 
 
-          if (table_parts[i].find("Bumper") != -1) {
+          if (table_parts[i].find("L  amp") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
           }
 
@@ -405,7 +408,7 @@ namespace octet {
             if (objA == FLIPPER || objB == FLIPPER) {
               if (runtime_debug) printf("The pinball has hit a FLIPPER\n");
             } 
-            else if (objA == BUMPER || objB == BUMPER) {
+            else if (objA == LAMP || objB == LAMP) {
               if (runtime_debug) printf("The pinball has hit a BUMPER\n");
               if (soundDingDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBumper();
