@@ -69,6 +69,7 @@ namespace octet {
 
         seed = new random();
         matrix.loadIdentity();
+        rigidbody->setActivationState(DISABLE_DEACTIVATION);    // disables the deactiveation state
 
         // Sounds
         current_source = 0;

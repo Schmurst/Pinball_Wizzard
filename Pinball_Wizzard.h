@@ -37,7 +37,7 @@ namespace octet {
       bool runtime_debug = true;
 
       // create an enum used to specify certain object types for collision logic
-      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, FACE = 4, LAUNCHER = 5, LAMP = 6 };
+      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, FACE = 4, LAUNCHER = 5, LAMP = 6, SCROLL = 7 };
 
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
@@ -163,21 +163,25 @@ namespace octet {
         table_parts.push_back("Lamp009");
         table_parts.push_back("LampLeft");
         table_parts.push_back("LampRight");
+        table_parts.push_back("LampReflector");
         table_parts.push_back("EyeLeft"); 
         table_parts.push_back("EyeRight");
         table_parts.push_back("BrowLeft");   
-        table_parts.push_back("BrowRight");  
-        table_parts.push_back("BarrierReflector");             
+        table_parts.push_back("BrowRight");              
         table_parts.push_back("Launcher");      
         table_parts.push_back("Mouth");   
         table_parts.push_back("Glass");
+        table_parts.push_back("Scroll001");
+        table_parts.push_back("Scroll002");
+        table_parts.push_back("Scroll003");
+        table_parts.push_back("Scroll004");
+        table_parts.push_back("Scroll005");
+        table_parts.push_back("Scroll006");
 
         // Materials
         material *lamp_mat = new material(new image("assets/Pinball_Wizzard/LampTexture.gif"));
-        if (lamp_mat == nullptr) {
-          lamp_mat = collada_materials[0]->get_material();
-        }
         material *table_mat = new material(new image("assets/Pinball_Wizzard/BookTexture.gif"));
+        material *scroll_mat = new material(new image("assets/Pinball_Wizzard/scrollTexture.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
         material *wizzard_mat = new material(vec4(0.1f, 0.6f, 0.1f, 1.0f));
@@ -213,22 +217,26 @@ namespace octet {
         
         // now for the table parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
+          string temp;
           // get the node and mesh of each object in table parts list
           node_part = dict.get_scene_node(table_parts[i]);
           table_parent->add_child(node_part);
-          table_parts[i] += "-mesh";
-          mesh_part = dict.get_mesh(table_parts[i]);
+          temp = table_parts[i];
+          temp += "-mesh";
+          mesh_part = dict.get_mesh(temp);
 
           // if the above method finding the string fails attempt adding a # infront
           // this is done by collada when the mesh has a material attached to it
 
           if (mesh_part == nullptr) {
-            table_parts[i] += "+Lamp-material";
-            mesh_part = dict.get_mesh(table_parts[i]);
-          }
-
-          if (mesh_part == nullptr) {
-            mesh_part = collada_meshes[0]->get_mesh();
+            if (temp.find("Lamp") != -1) {
+              temp += "+Lamp-material";
+              mesh_part = dict.get_mesh(temp);
+            }
+            else if (temp.find("Scroll") != -1) {
+              temp += "+paper-material";
+              mesh_part = dict.get_mesh(temp);
+            }
           }
 
           // create axis_aligned bounding box
@@ -269,6 +277,11 @@ namespace octet {
             height = size[2];
             table_boxes.push_back(new Cylinder3D(node_part, radii, height, lamp_mat, 0.0));
             table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
+            table_boxes[i]->setMesh(mesh_part);
+          }
+          else if (table_parts[i].find("Scroll") != -1) {
+            table_boxes.push_back(new Box3D(node_part, size, scroll_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(SCROLL);
             table_boxes[i]->setMesh(mesh_part);
           }
           else {
@@ -314,11 +327,11 @@ namespace octet {
           btTransform partTransform = btTransform(matrix, pos);
           btRigidBody *rigidbody = table_boxes[i]->getRigidBody();
           rigidbody->setWorldTransform(tableTransform * partTransform);
-          if (table_parts[i].find("Glass") == -1) {
-            table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
+          if (table_parts[i].find("Glass") != -1 || table_parts[i].find("Barrier") != -1) {
+            table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, false, false);
           }
           else {
-            table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, false, false);
+            table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
           }
         }
           
@@ -328,7 +341,7 @@ namespace octet {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
           } 
 
-          if (table_parts[i].find("L  amp") != -1) {
+          if (table_parts[i].find("Lamp") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
           }
 
