@@ -34,7 +34,7 @@ namespace octet {
 
       // debugs
       bool collada_debug = true;
-      bool runtime_debug = false;
+      bool runtime_debug = true;
 
       // create an enum used to specify certain object types for collision logic
       enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, BUMPER = 4, FACE = 5, LAUNCHER = 6, LAMP = 7 };
@@ -43,7 +43,7 @@ namespace octet {
       Flipper flipperR, flipperL;
       Pinball pinball;
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
-      int soundPopDelay = 0, speedUpdateDelay = 0, soundDingDelay = 0;
+      int soundPopDelay = 0, speedUpdateDelay = 0, soundDingDelay = 0, soundBounceDelay = 0;
       int flipperCoolDown = 15; // frames between flips
 
     public:
@@ -132,6 +132,7 @@ namespace octet {
         // create dictionary & collada builder
         resource_dict dict;
         dynarray<resource*> collada_meshes;
+        dynarray<resource*> collada_mats;
         collada_builder colladaBuilder;
         if (!colladaBuilder.load_xml("assets/Pinball_Wizzard/PinballWizzardAssets.dae")) {
           printf("failed to load the pinball table file");
@@ -141,6 +142,7 @@ namespace octet {
         // get meshes and their respective nodes from dictionary
         colladaBuilder.get_resources(dict);
         dict.find_all(collada_meshes, atom_mesh);
+        dict.find_all(collada_mats, atom_material);
         printf("collada_meshes size: %i\n", collada_meshes.size());
 
         // part list, taken from collada file, very important to keep uptodate
@@ -166,10 +168,10 @@ namespace octet {
         table_parts.push_back("Mouth");   
         table_parts.push_back("Glass");
         table_parts.push_back("Circle");
-        table_parts.push_back("Lamp");
+        table_parts.push_back("zLamp");
 
         // Materials
-        material *lamp_mat = dict.get_material("Lamp-material");
+        material *lamp_mat = collada_mats[0]->get_material();
         material *table_mat = new material(new image("assets/Pinball_Wizzard/nebula.gif"));
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
@@ -215,11 +217,7 @@ namespace octet {
           // if the above method finding the string fails attempt adding a # infront
           // this is done by collada when the mesh has a material attached to it
           if (mesh_part == nullptr) {
-            string temp = "#";
-            temp += table_parts[i];
-            mesh_part = dict.get_mesh(temp);
-            printf("id string: %s", temp);
-            mesh_part = collada_meshes[i]->get_mesh();
+            mesh_part = collada_meshes[0]->get_mesh();
           }
 
           // create axis_aligned bounding box
@@ -230,7 +228,7 @@ namespace octet {
           // the following check decides whether a collada mesh instance should be converted into a 
           // Box3D object or a Cylinder3D object depending on the collada mesh name
 
-          if (table_parts[i].find("Table") != -1) {
+          if (table_parts[i].find("Table") != -1 || table_parts[i].find("Glass") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, table_mat, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(TABLE);
           }
@@ -266,7 +264,7 @@ namespace octet {
             float radii, height;
             radii = size[0];
             height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, radii, height, wizzard_mat, mesh_part, 0.0));
+            table_boxes.push_back(new Cylinder3D(node_part, radii, height, lamp_mat, mesh_part, 0.0));
             table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
             table_boxes[i]->setMesh(mesh_part);
           }
@@ -280,6 +278,7 @@ namespace octet {
           if (collada_debug) {
             printf("\n --------------------------------------------------------------------");
             printf("\nName of mesh: %s \n", table_parts[i]);
+            printf("User index: %i\n", table_boxes[i]->getRigidBody()->getUserIndex());
             printf("Half extents  x: %f y: %f z: %f \n", size[0], size[1], size[2]);
             printf("aabb center   x: %f y: %f z: %f \n", aabb_part.get_center()[0], aabb_part.get_center()[1], aabb_part.get_center()[2]);
             printf("aabb extents  x: %f y: %f z: %f \n", aabb_part.get_half_extent()[0], aabb_part.get_half_extent()[1], aabb_part.get_half_extent()[2]);
@@ -410,17 +409,24 @@ namespace octet {
               if (runtime_debug) printf("The pinball has hit a BUMPER\n");
               if (soundDingDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBumper();
-                soundDingDelay += 5;
+                soundDingDelay += 15;
+              }
+            }
+            else if (objA == LAUNCHER || objB == LAUNCHER) {
+              if (runtime_debug) printf("The pinball has hit the Launcher\n");
+              if (soundBounceDelay == 0 && pinball.isImpact()) {
+                pinball.playSoundHitLauncher();
+                soundBounceDelay += 15;
               }
             }
             else if (objA == FACE || objB == FACE) {
               if (runtime_debug) printf("The pinball has hit the FACE\n");
             }
             else if (objA == BARRIER || objB == BARRIER) {
-              if (runtime_debug) printf("The pinball has hit the FACE\n");
+              if (runtime_debug) printf("The pinball has hit the BARRIER\n");
               if (soundPopDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBarrier();
-                soundPopDelay += 5;
+                soundPopDelay += 15;
               }
             }
           }
@@ -452,6 +458,8 @@ namespace octet {
         if (speedUpdateDelay > 0) speedUpdateDelay--;
 
         if (soundDingDelay > 0) soundDingDelay--;
+
+        if (soundBounceDelay > 0) soundBounceDelay--;
 
         // Key handlers, when pushed will flip the flippers
         if (is_key_down('Z') && flipDelayR == 0) {
