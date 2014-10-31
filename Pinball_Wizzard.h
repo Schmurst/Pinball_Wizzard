@@ -158,12 +158,8 @@ namespace octet {
         table_parts.push_back("Lamp004");
         table_parts.push_back("Lamp005");
         table_parts.push_back("Lamp006");
-        table_parts.push_back("Lamp007");
-        table_parts.push_back("Lamp008");
-        table_parts.push_back("Lamp009");
         table_parts.push_back("LampLeft");
         table_parts.push_back("LampRight");
-        table_parts.push_back("LampReflector");
         table_parts.push_back("EyeLeft"); 
         table_parts.push_back("EyeRight");
         table_parts.push_back("BrowLeft");   
@@ -177,6 +173,8 @@ namespace octet {
         table_parts.push_back("Scroll004");
         table_parts.push_back("Scroll005");
         table_parts.push_back("Scroll006");
+        table_parts.push_back("ScrollGuide");
+        table_parts.push_back("ScrollReflector");
 
         // Materials
         material *lamp_mat = new material(new image("assets/Pinball_Wizzard/LampTexture.gif"));
@@ -337,7 +335,7 @@ namespace octet {
           
         // this code will loop throught the rigidbodies and set the right restitution for the parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
-          if (table_parts[i].find("Barrier") != -1) {
+          if (table_parts[i].find("Scroll") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
           } 
 
