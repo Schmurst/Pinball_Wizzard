@@ -37,8 +37,8 @@ namespace octet {
       ref<mesh_text> text;
 
       // Score and multiplyer
-      float mulitiplyer;
-      float score;
+      float mulitiplyer = 1.0f;
+      float score = 0.0f;
       float score_scroll = 20.0f;
       float multi_scroll = 0.5f;
       float score_lamp = 50.0f;
@@ -91,7 +91,7 @@ namespace octet {
         scene_node *light_node = new scene_node();
         light *light_fill = new light();
         light_fill->set_color(vec4(0.0f, 0.0f, 1.0f, 1.0f));
-        light_fill->set_attenuation(1, 0, -1);
+        light_fill->set_attenuation(1, -6, -8);
         light_node->rotate(-45, vec3(1, 0, 0));
         light_node->translate(vec3(20, 0, 20));
         app_scene->add_light_instance(new light_instance(light_node, light_fill));
@@ -123,12 +123,22 @@ namespace octet {
         material *sphere_mat = new material(new image("assets/Pinball_Wizzard/Eye.gif"));
         float pinballRestitution = 1.0f;
         modelToWorld.loadIdentity();
-        modelToWorld.translate(0.7f, 6.0f, -2.0f);
+        modelToWorld.translate(1000.0f, 6.0f, -2.0f);
         pinball.init_sphere(modelToWorld, 0.5f, sphere_mat, 1.0f);
         pinball.add_to_scene(nodes, app_scene, *world, rigid_bodies);
         pinball.getRigidBody()->setRestitution(pinballRestitution);
         pinball.getRigidBody()->setDamping(0.05f, 0.05f);
         pinball.getRigidBody()->setUserIndex(PINBALL);
+
+        // add a light ontop of the ball
+        //scene_node *node_lamp_light = new scene_node();
+        //light *lamp_light = new light();
+        //lamp_light->set_color(vec4(0, 0.8f, 0, 1.0f));
+        //lamp_light->set_near_far(0.2f, 2.0f);
+        //lamp_light->set_attenuation(1.0f, 5.0f, 10.0f);
+        //pinball.getNode()->add_child(node_lamp_light);
+        //node_lamp_light->translate(vec3(0, 0, 0.8f));
+        //app_scene->add_light_instance(new light_instance(node_lamp_light, lamp_light));
 
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
         float torqueImpluse = 250.0f;
@@ -312,6 +322,16 @@ namespace octet {
             table_boxes.push_back(new Cylinder3D(node_part, radii, height, lamp_mat, 0.0));
             table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
             table_boxes[i]->setMesh(mesh_part);
+
+            // add a light atop the lamp
+            scene_node *node_lamp_light = new scene_node();
+            light *lamp_light = new light();
+            lamp_light->set_kind(atom_point);
+            lamp_light->set_color(vec4(1.0f, 0.5f, 0, 1.0f));
+            lamp_light->set_near_far(0.2f, 1.0f);
+            node_part->add_child(node_lamp_light);
+            node_lamp_light->translate(vec3(0, 0, 1.2f));
+            app_scene->add_light_instance(new light_instance(node_lamp_light, lamp_light));
           }
           else if (table_parts[i].find("Scroll") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, scroll_mat, 0.0f));
@@ -408,8 +428,6 @@ namespace octet {
 
 
         //////////////////////////////// General setup /////////////////////////
-        // reset the pinball
-        pinball.reset();
 
         // add the skybox sphere to the world no rigidbody
         modelToWorld.loadIdentity();
@@ -424,10 +442,6 @@ namespace octet {
         for (unsigned int i = 0; i < rigid_bodies.size(); i++) {
           printf("userpointer: %i\n", rigid_bodies[i]->getUserIndex());
         }
-
-        // set score and mulitplyer to default values
-        score = 0.0f;
-        mulitiplyer = 1.0f;
 
         ///////////////////////////////////// XBOX Pad ///////////////////////////////
         // create an xbox controller object
@@ -552,8 +566,8 @@ namespace octet {
         app_scene->render((float)vx / vy);
 
         // rotate the skybox (skysphere)
-        skybox_node->rotate(0.25f, vec3(0, 1, 0));
-        skybox_node->rotate(0.125f, vec3(1, 0, 1));
+        skybox_node->rotate(0.25f / 10, vec3(0, 1, 0));
+        skybox_node->rotate(0.125f / 10, vec3(1, 0, 1));
 
         ///////////////////////////////////// Draw the UI ///////////////////////////////
         // clear and update text

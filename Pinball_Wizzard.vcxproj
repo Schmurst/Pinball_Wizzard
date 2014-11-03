@@ -219,6 +219,9 @@
     <ClInclude Include="CollisionCalcs.h" />
     <ClInclude Include="Cylinder3D.h" />
     <ClInclude Include="Flipper.h" />
+    <ClInclude Include="Header.h" />
+    <ClInclude Include="Header1.h" />
+    <ClInclude Include="Lamp.h" />
     <ClInclude Include="mesh_tri_prism.h" />
     <ClInclude Include="Object3D.h" />
     <ClInclude Include="Pinball.h" />
