@@ -32,15 +32,13 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
+      // Overlay and text drawing
+      ref<text_overlay> overlay;
+      ref<mesh_text> text;
+
       // Score and multiplyer
       float mulitiplyer;
       float score;
-
-      // variables requied for our UI text
-      texture_shader textureShader;
-      mat4t cameraToWorld;
-      GLuint fontTexture;
-      bitmap_font font;
 
       // debugs
       bool collada_debug = true;
@@ -56,35 +54,8 @@ namespace octet {
       int soundPopDelay = 0, speedUpdateDelay = 0, soundDingDelay = 0, soundBounceDelay = 0;
       int flipperCoolDown = 15; // frames between flips
 
-      // draw text function purloined from invaderers, understand and edit
-      void draw_text(texture_shader &shader, float screenX, float screenY, float scale, string text) {
-
-        // set up projection matrix
-        mat4t modelToWorld;
-        modelToWorld.loadIdentity();
-        modelToWorld.translate(screenX, screenY, 0);
-        modelToWorld.scale(scale, scale, 1);
-        mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
-
-        // number of 
-        enum { max_quads = 32 };
-        bitmap_font::vertex vertices[max_quads * 4];
-        uint32_t indices[max_quads * 6];
-        aabb bb(vec3(0, 0, 0), vec3(256, 256, 0));
-
-        unsigned num_quads = font.build_mesh(bb, vertices, indices, max_quads, text, 0);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fontTexture);
-
-        shader.render(modelToProjection, 0);
-
-        glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, sizeof(bitmap_font::vertex), (void*)&vertices[0].x);
-        glEnableVertexAttribArray(attribute_pos);
-        glVertexAttribPointer(attribute_uv, 3, GL_FLOAT, GL_FALSE, sizeof(bitmap_font::vertex), (void*)&vertices[0].u);
-        glEnableVertexAttribArray(attribute_uv);
-
-        glDrawElements(GL_TRIANGLES, num_quads * 6, GL_UNSIGNED_INT, indices);
-      }
+      // skybox
+      scene_node *skybox_node;
 
     public:
       /// this is called when we construct the class before everything is initialised.
@@ -105,6 +76,8 @@ namespace octet {
       /// this is called once OpenGL is initialized
       void app_init() {
 
+
+        // initialise the scene
         app_scene = new visual_scene();
         app_scene->create_default_camera_and_lights();
         app_scene->get_camera_instance(0)->get_node()->rotate(-22.0f, vec3(1.0, 0, 0));
@@ -121,6 +94,20 @@ namespace octet {
         light_node->rotate(-45, vec3(1, 0, 0));
         light_node->translate(vec3(20, 0, 20));
         app_scene->add_light_instance(new light_instance(light_node, light_fill));
+
+        // Purloined from example_text.h
+        // create the overlay
+        overlay = new text_overlay();
+
+        // get the defualt font.
+        bitmap_font *font = overlay->get_default_font();
+
+        // create a box containing text (in pixels)
+        aabb bb(vec3(64.5f, -200.0f, 0.0f), vec3(256, 64, 0));
+        text = new mesh_text(font, "sample text", &bb);
+
+        // add the mesh to the overlay.
+        overlay->add_mesh_text(text);
 
         ////////////////////////////////////////////////// Pinball ///////////////////////////////////////////
         // Add the pinball to the world
@@ -419,7 +406,7 @@ namespace octet {
         modelToWorld.loadIdentity();
         modelToWorld.rotateY90();
         material *skybox_mat = new material(new image("assets/Pinball_Wizzard/largeGalField.gif"));
-        scene_node *skybox_node = new scene_node(modelToWorld, atom_);
+        skybox_node = new scene_node(modelToWorld, atom_);
         mesh_sphere *skybox_mesh = new mesh_sphere(vec3(0), 60.0f);
         nodes.push_back(skybox_node);
         app_scene->add_mesh_instance(new mesh_instance(skybox_node, skybox_mesh, skybox_mat));
@@ -454,22 +441,8 @@ namespace octet {
           speedUpdateDelay += 5;
         }
 
-        /////// Set up GL ///////// (taken from invaderers.h)
-        // set up a viewport that inclused the entire screen
-        glViewport(x, y, w, h);
-        // clear the background
-        glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // ?
-        // allow alpha blend (transparency when alpha channel is 0)
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        ///////////////////////////////////// Collisions ///////////////////////////////
 
-        // Draw the scores and other such information of the screen
-        char ui_text[32];
-        sprintf(ui_text, "Score: %d Multiplyer: %d\n", score, mulitiplyer);
-        draw_text(textureShader, -1.0f, 1.0f, 1.0/256, ui_text);    // ~1/256
-
-        // collision handler
         int numManifolds = world->getDispatcher()->getNumManifolds();
         if (runtime_debug) printf("------new physics step--------\n");
         for (int i = 0; i<numManifolds; i++)
@@ -478,7 +451,7 @@ namespace octet {
           int objA = contactManifold->getBody0()->getUserIndex();
           int objB = contactManifold->getBody1()->getUserIndex();
 
-          // check what has hit what
+          // check what has hit what and then play sounds
           if (objA == PINBALL || objB == PINBALL) {
             if (objA == FLIPPER || objB == FLIPPER) {
               if (runtime_debug) printf("The pinball has hit a FLIPPER\n");
@@ -511,9 +484,10 @@ namespace octet {
         }
 
         world->stepSimulation(1.0f / 30);
-
+        // limit the speed of the pinball
         pinball.limitSpeed();
         
+        ///////////////////////////////////// update mesh positions to RBs ///////////////////////////////
         for (unsigned i = 0; i != rigid_bodies.size(); ++i) {
           btRigidBody *rigid_body = rigid_bodies[i];
           btQuaternion btq = rigid_body->getOrientation();
@@ -524,7 +498,7 @@ namespace octet {
           nodes[i]->access_nodeToParent() = modelToWorld;
         }
 
-        // decrement delays
+        ///////////////////////////////////// delay handling ///////////////////////////////
         if (flipDelayL > 0) flipDelayL--;
 
         if (flipDelayR > 0) flipDelayR--;
@@ -539,7 +513,7 @@ namespace octet {
 
         if (soundBounceDelay > 0) soundBounceDelay--;
 
-        // Key handlers, when pushed will flip the flippers
+        ///////////////////////////////////// Key handlers ///////////////////////////////
         if (is_key_down('Z') && flipDelayR == 0) {
           flipperL.flip();
           flipDelayR = flipperCoolDown;
@@ -560,6 +534,13 @@ namespace octet {
         // update matrices. assume 30 fps.
         app_scene->update(1.0f / 30);      // draw the scene
         app_scene->render((float)vx / vy);
+
+        // rotate the skybox (skysphere)
+        skybox_node->rotate(0.25f, vec3(0, 1, 0));
+        skybox_node->rotate(0.125f, vec3(1, 0, 1));
+
+        ///////////////////////////////////// Draw the UI ///////////////////////////////
+        char buf[3][256];
       }
     };
   }
