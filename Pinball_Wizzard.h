@@ -32,6 +32,9 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
+      // a texture shader to draw a textured trianlge (invaderers.h)
+      texture_shader textureShader;
+
       // debugs
       bool collada_debug = true;
       bool runtime_debug = true;
@@ -45,6 +48,12 @@ namespace octet {
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
       int soundPopDelay = 0, speedUpdateDelay = 0, soundDingDelay = 0, soundBounceDelay = 0;
       int flipperCoolDown = 15; // frames between flips
+
+      // purloined from invaderers.h
+      // 
+      void draw_text(texture_shader &shader, float screenX, float screenY, float scale, string text) {
+
+      }
 
     public:
       /// this is called when we construct the class before everything is initialised.
@@ -400,6 +409,9 @@ namespace octet {
         get_viewport_size(vx, vy);
         app_scene->begin_render(vx, vy);
 
+        // used in collision detection to 'delay' the previous speed by 5 frames
+        // this is because a collision often to always lasts more than 3 frames,
+        // over which a large change in speed is changed incrementally              (is this true?)
         if (speedUpdateDelay == 0) {
           pinball.updateSpeed();
           speedUpdateDelay += 5;
