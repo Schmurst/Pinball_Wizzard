@@ -32,8 +32,15 @@ namespace octet {
 
       const float PI = 3.14159265f;
 
-      // a texture shader to draw a textured trianlge (invaderers.h)
+      // Score and multiplyer
+      float mulitiplyer;
+      float score;
+
+      // variables requied for our UI text
       texture_shader textureShader;
+      mat4t cameraToWorld;
+      GLuint fontTexture;
+      bitmap_font font;
 
       // debugs
       bool collada_debug = true;
@@ -49,10 +56,34 @@ namespace octet {
       int soundPopDelay = 0, speedUpdateDelay = 0, soundDingDelay = 0, soundBounceDelay = 0;
       int flipperCoolDown = 15; // frames between flips
 
-      // purloined from invaderers.h
-      // 
+      // draw text function purloined from invaderers, understand and edit
       void draw_text(texture_shader &shader, float screenX, float screenY, float scale, string text) {
 
+        // set up projection matrix
+        mat4t modelToWorld;
+        modelToWorld.loadIdentity();
+        modelToWorld.translate(screenX, screenY, 0);
+        modelToWorld.scale(scale, scale, 1);
+        mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
+
+        // number of 
+        enum { max_quads = 32 };
+        bitmap_font::vertex vertices[max_quads * 4];
+        uint32_t indices[max_quads * 6];
+        aabb bb(vec3(0, 0, 0), vec3(256, 256, 0));
+
+        unsigned num_quads = font.build_mesh(bb, vertices, indices, max_quads, text, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, fontTexture);
+
+        shader.render(modelToProjection, 0);
+
+        glVertexAttribPointer(attribute_pos, 3, GL_FLOAT, GL_FALSE, sizeof(bitmap_font::vertex), (void*)&vertices[0].x);
+        glEnableVertexAttribArray(attribute_pos);
+        glVertexAttribPointer(attribute_uv, 3, GL_FLOAT, GL_FALSE, sizeof(bitmap_font::vertex), (void*)&vertices[0].u);
+        glEnableVertexAttribArray(attribute_uv);
+
+        glDrawElements(GL_TRIANGLES, num_quads * 6, GL_UNSIGNED_INT, indices);
       }
 
     public:
@@ -379,6 +410,8 @@ namespace octet {
         world->addConstraint(hingeFlipperLeft);
         world->addConstraint(hingeFlipperRight);
 
+
+        //////////////////////////////// General setup /////////////////////////
         // reset the pinball
         pinball.reset();
 
@@ -395,6 +428,10 @@ namespace octet {
         for (unsigned int i = 0; i < rigid_bodies.size(); i++) {
           printf("userpointer: %i\n", rigid_bodies[i]->getUserIndex());
         }
+
+        // set score and mulitplyer to default values
+        score = 0.0f;
+        mulitiplyer = 1.0f;
 
         ///////////////////////////////////// XBOX Pad ///////////////////////////////
         // create an xbox controller object
@@ -416,6 +453,11 @@ namespace octet {
           pinball.updateSpeed();
           speedUpdateDelay += 5;
         }
+
+        // Draw the scores and other such information of the screen
+        char ui_text[32];
+        sprintf(ui_text, "Score: %f Multiplyer: %f", score, mulitiplyer);
+        draw_text(textureShader, -1.0f, 1.0f, 0.003906f, ui_text);    // ~1/256
 
         // collision handler
         int numManifolds = world->getDispatcher()->getNumManifolds();
