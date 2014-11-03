@@ -57,6 +57,9 @@ namespace octet {
       // skybox
       scene_node *skybox_node;
 
+      // Ui_text node
+      scene_node *text_node;
+
     public:
       /// this is called when we construct the class before everything is initialised.
       Pinball_Wizzard(int argc, char **argv) : app(argc, argv) {
@@ -416,6 +419,13 @@ namespace octet {
           printf("userpointer: %i\n", rigid_bodies[i]->getUserIndex());
         }
 
+        // Add the UI node to the scene
+        material *text_material = new material(vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        mesh_box *text_box = new mesh_box(vec3(4));
+        text_node = new scene_node();
+        app_scene->add_child(text_node);
+        app_scene->add_mesh_instance(new mesh_instance(text_node, text_box, text_material));
+
         // set score and mulitplyer to default values
         score = 0.0f;
         mulitiplyer = 1.0f;
@@ -541,6 +551,24 @@ namespace octet {
 
         ///////////////////////////////////// Draw the UI ///////////////////////////////
         char buf[3][256];
+        const mat4t &matrix = text_node->access_nodeToParent();
+
+        text->clear();
+        text->format(
+          "matrix x: %s\n"
+          "matrix y: %s\n"
+          "matrix z: %s\n",
+          matrix.x().toString(buf[0], sizeof(buf[0])),
+          matrix.y().toString(buf[1], sizeof(buf[1])),
+          matrix.z().toString(buf[2], sizeof(buf[2]))
+          );
+
+        // convert it to a mesh.
+        text->update();
+
+        // draw the text overlay
+        overlay->render(vx, vy);
+
       }
     };
   }
