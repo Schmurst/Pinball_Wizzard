@@ -39,6 +39,12 @@ namespace octet {
       // Score and multiplyer
       float mulitiplyer;
       float score;
+      float score_scroll = 20.0f;
+      float multi_scroll = 0.5f;
+      float score_lamp = 50.0f;
+      float multi_lamp = 0.1f;
+      float score_launch = 100.0f;
+      float multi_launch = 1.0f;
 
       // debugs
       bool collada_debug = true;
@@ -80,14 +86,8 @@ namespace octet {
 
         // initialise the scene
         app_scene = new visual_scene();
-        app_scene->create_default_camera_and_lights();
-        app_scene->get_camera_instance(0)->get_node()->rotate(-22.0f, vec3(1.0, 0, 0));
-        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -9.5f));
-        app_scene->get_camera_instance(0)->set_perspective(0, 70, 1, 0.1f, 1000.0f);
-        world->setGravity(btVector3(0, -30.0f, 0));
-        mat4t modelToWorld;
 
-        // Add a a fill light to the scene and create camera instance
+        // Add a a fill light to the scene
         scene_node *light_node = new scene_node();
         light *light_fill = new light();
         light_fill->set_color(vec4(0.0f, 0.0f, 1.0f, 1.0f));
@@ -95,6 +95,14 @@ namespace octet {
         light_node->rotate(-45, vec3(1, 0, 0));
         light_node->translate(vec3(20, 0, 20));
         app_scene->add_light_instance(new light_instance(light_node, light_fill));
+
+        // set up deafult camera
+        app_scene->create_default_camera_and_lights();
+        app_scene->get_camera_instance(0)->get_node()->rotate(-22.0f, vec3(1.0, 0, 0));
+        app_scene->get_camera_instance(0)->get_node()->translate(vec3(0, 10.0f, -9.5f));
+        app_scene->get_camera_instance(0)->set_perspective(0, 70, 1, 0.1f, 1000.0f);
+        world->setGravity(btVector3(0, -30.0f, 0));
+        mat4t modelToWorld;
 
         // Purloined from example_text.h
         // create the overlay
@@ -104,7 +112,7 @@ namespace octet {
         bitmap_font *font = overlay->get_default_font();
 
         // create a box containing text (in pixels)
-        aabb text_aabb(vec3(500.0, 300.0f, 0.0f), vec3(256, 64, 0));
+        aabb text_aabb(vec3(450.0, 300.0f, 0.0f), vec3(256, 64, 0));
         text = new mesh_text(font, "sample text", &text_aabb);
 
         // add the mesh to the overlay.
@@ -463,6 +471,8 @@ namespace octet {
               if (soundDingDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBumper();
                 soundDingDelay += 15;
+                mulitiplyer += multi_lamp;
+                score += score_lamp * mulitiplyer;
               }
             }
             else if (objA == LAUNCHER || objB == LAUNCHER) {
@@ -470,16 +480,20 @@ namespace octet {
               if (soundBounceDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitLauncher();
                 soundBounceDelay += 15;
+                mulitiplyer += multi_launch;
+                score += score_launch * mulitiplyer;
               }
             }
             else if (objA == FACE || objB == FACE) {
               if (runtime_debug) printf("The pinball has hit the FACE\n");
             }
-            else if (objA == BARRIER || objB == BARRIER) {
+            else if (objA == SCROLL || objB == SCROLL) {
               if (runtime_debug) printf("The pinball has hit the BARRIER\n");
               if (soundPopDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBarrier();
                 soundPopDelay += 15;
+                mulitiplyer += multi_scroll;
+                score += score_scroll * mulitiplyer;
               }
             }
           }
@@ -544,7 +558,7 @@ namespace octet {
         ///////////////////////////////////// Draw the UI ///////////////////////////////
         // clear and update text
         text->clear();
-        text->format("SCORE: %4.2f\n" "MULITPLIER: %4.2f\n", score, mulitiplyer);
+        text->format("SCORE: %8.2f\n" "MULITPLIER: %4.2f\n", score, mulitiplyer);
 
         // convert it to a mesh.
         text->update();
