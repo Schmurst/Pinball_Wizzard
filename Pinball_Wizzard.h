@@ -454,10 +454,20 @@ namespace octet {
           speedUpdateDelay += 5;
         }
 
+        /////// Set up GL ///////// (taken from invaderers.h)
+        // set up a viewport that inclused the entire screen
+        glViewport(x, y, w, h);
+        // clear the background
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // ?
+        // allow alpha blend (transparency when alpha channel is 0)
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         // Draw the scores and other such information of the screen
         char ui_text[32];
-        sprintf(ui_text, "Score: %f Multiplyer: %f", score, mulitiplyer);
-        draw_text(textureShader, -1.0f, 1.0f, 0.003906f, ui_text);    // ~1/256
+        sprintf(ui_text, "Score: %d Multiplyer: %d\n", score, mulitiplyer);
+        draw_text(textureShader, -1.0f, 1.0f, 1.0/256, ui_text);    // ~1/256
 
         // collision handler
         int numManifolds = world->getDispatcher()->getNumManifolds();
