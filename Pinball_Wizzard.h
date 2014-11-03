@@ -57,9 +57,6 @@ namespace octet {
       // skybox
       scene_node *skybox_node;
 
-      // Ui_text node
-      scene_node *text_node;
-
     public:
       /// this is called when we construct the class before everything is initialised.
       Pinball_Wizzard(int argc, char **argv) : app(argc, argv) {
@@ -76,9 +73,10 @@ namespace octet {
         delete dispatcher;
       }
 
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// app_init
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       /// this is called once OpenGL is initialized
       void app_init() {
-
 
         // initialise the scene
         app_scene = new visual_scene();
@@ -102,12 +100,12 @@ namespace octet {
         // create the overlay
         overlay = new text_overlay();
 
-        // get the defualt font.
+        // get the font
         bitmap_font *font = overlay->get_default_font();
 
         // create a box containing text (in pixels)
-        aabb bb(vec3(64.5f, -200.0f, 0.0f), vec3(256, 64, 0));
-        text = new mesh_text(font, "sample text", &bb);
+        aabb text_aabb(vec3(500.0, 300.0f, 0.0f), vec3(256, 64, 0));
+        text = new mesh_text(font, "sample text", &text_aabb);
 
         // add the mesh to the overlay.
         overlay->add_mesh_text(text);
@@ -419,13 +417,6 @@ namespace octet {
           printf("userpointer: %i\n", rigid_bodies[i]->getUserIndex());
         }
 
-        // Add the UI node to the scene
-        material *text_material = new material(vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        mesh_box *text_box = new mesh_box(vec3(4));
-        text_node = new scene_node();
-        app_scene->add_child(text_node);
-        app_scene->add_mesh_instance(new mesh_instance(text_node, text_box, text_material));
-
         // set score and mulitplyer to default values
         score = 0.0f;
         mulitiplyer = 1.0f;
@@ -436,7 +427,8 @@ namespace octet {
         //xboxPad.getState() ? printf("The Xbox pad is plugged in") : printf("The Xbox pad is NOT plugged in");
       }
 
-      /// this is called to draw the world
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// draw_world
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       void draw_world(int x, int y, int w, int h) {
         int vx, vy;
         vx = vy = 0;
@@ -455,7 +447,7 @@ namespace octet {
 
         int numManifolds = world->getDispatcher()->getNumManifolds();
         if (runtime_debug) printf("------new physics step--------\n");
-        for (int i = 0; i<numManifolds; i++)
+        for (int i = 0; i < numManifolds; i++)
         {
           btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
           int objA = contactManifold->getBody0()->getUserIndex();
@@ -550,18 +542,9 @@ namespace octet {
         skybox_node->rotate(0.125f, vec3(1, 0, 1));
 
         ///////////////////////////////////// Draw the UI ///////////////////////////////
-        char buf[3][256];
-        const mat4t &matrix = text_node->access_nodeToParent();
-
+        // clear and update text
         text->clear();
-        text->format(
-          "matrix x: %s\n"
-          "matrix y: %s\n"
-          "matrix z: %s\n",
-          matrix.x().toString(buf[0], sizeof(buf[0])),
-          matrix.y().toString(buf[1], sizeof(buf[1])),
-          matrix.z().toString(buf[2], sizeof(buf[2]))
-          );
+        text->format("SCORE: %4.2f\n" "MULITPLIER: %4.2f\n", score, mulitiplyer);
 
         // convert it to a mesh.
         text->update();
