@@ -48,7 +48,7 @@ namespace octet {
 
       // debugs
       bool collada_debug = true;
-      bool runtime_debug = true;
+      bool runtime_debug = false;
 
       // create an enum used to specify certain object types for collision logic
       enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, FACE = 4, LAUNCHER = 5, LAMP = 6, SCROLL = 7 };
@@ -222,10 +222,13 @@ namespace octet {
         table_parts.push_back("ScrollGuide");
         table_parts.push_back("ScrollReflector");
 
+        // new texture shader taht handles attenuation
+        param_shader *atten_shader = new param_shader("shaders/default.vs", "shaders/attenuation_texture.fs");
+
         // Materials
-        material *lamp_mat = new material(new image("assets/Pinball_Wizzard/LampTexture.gif"));
-        material *table_mat = new material(new image("assets/Pinball_Wizzard/BookTexture.gif"));
-        material *scroll_mat = new material(new image("assets/Pinball_Wizzard/scrollTexture.gif"));
+        material *lamp_mat = new material(new image("assets/Pinball_Wizzard/LampTexture.gif"), NULL, NULL);
+        material *table_mat = new material(new image("assets/Pinball_Wizzard/BookTexture.gif"), NULL, NULL);
+        material *scroll_mat = new material(new image("assets/Pinball_Wizzard/scrollTexture.gif"), NULL, NULL);
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
         material *wizzard_mat = new material(vec4(0.1f, 0.6f, 0.1f, 1.0f));
@@ -319,19 +322,22 @@ namespace octet {
             float radii, height;
             radii = size[0];
             height = size[2];
-            table_boxes.push_back(new Lamp(node_part, radii, height, lamp_mat, mesh_part, 0.0f));
+            Lamp *lamp = new Lamp(node_part, radii, height, lamp_mat, mesh_part, 0.0f);
+            lamp->init_lamp(app_scene);
+
+            table_boxes.push_back(lamp);
             table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
             table_boxes[i]->setMesh(mesh_part);
 
-            // add a light atop the lamp
-            scene_node *node_lamp_light = new scene_node();
-            light *lamp_light = new light();
-            lamp_light->set_kind(atom_point);
-            lamp_light->set_color(vec4(1.0f, 0.5f, 0, 1.0f));
-            lamp_light->set_near_far(0.2f, 1.0f);
-            node_part->add_child(node_lamp_light);
-            node_lamp_light->translate(vec3(0, 0, 1.2f));
-            app_scene->add_light_instance(new light_instance(node_lamp_light, lamp_light));
+            //// add a light atop the lamp
+            //scene_node *node_lamp_light = new scene_node();
+            //light *lamp_light = new light();
+            //lamp_light->set_kind(atom_point);
+            //lamp_light->set_color(vec4(1.0f, 0.5f, 0, 1.0f));
+            //lamp_light->set_near_far(0.2f, 1.0f);
+            //node_part->add_child(node_lamp_light);
+            //node_lamp_light->translate(vec3(0, 0, 1.2f));
+            //app_scene->add_light_instance(new light_instance(node_lamp_light, lamp_light));
           }
           else if (table_parts[i].find("Scroll") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, scroll_mat, 0.0f));
@@ -381,6 +387,7 @@ namespace octet {
           btTransform partTransform = btTransform(matrix, pos);
           btRigidBody *rigidbody = table_boxes[i]->getRigidBody();
           rigidbody->setWorldTransform(tableTransform * partTransform);
+
           if (table_parts[i].find("Glass") != -1 || table_parts[i].find("Barrier") != -1) {
             table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, false, false);
           }
@@ -474,6 +481,7 @@ namespace octet {
           btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
           int objA = contactManifold->getBody0()->getUserIndex();
           int objB = contactManifold->getBody1()->getUserIndex();
+          
 
           // check what has hit what and then play sounds
           if (objA == PINBALL || objB == PINBALL) {
@@ -485,8 +493,10 @@ namespace octet {
               if (soundDingDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBumper();
                 soundDingDelay += 15;
-                mulitiplyer += multi_lamp;
-                score += score_lamp * mulitiplyer;
+                
+                //if (objA == LAMP) {
+                //  Lamp *pLamp = static_cast<Lamp*>(contactManifold->getBody0()->getUserPointer());
+                //}
               }
             }
             else if (objA == LAUNCHER || objB == LAUNCHER) {

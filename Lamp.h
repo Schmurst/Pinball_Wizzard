@@ -16,8 +16,9 @@ namespace octet {
     class Lamp : public Cylinder3D {
     private: 
       float score;
-      float multiplierBase;
+      float multiplier;
       float multiplierInc;
+      int lightIndex;
       scene_node *light_node;
       light *point_light;
 
@@ -45,27 +46,48 @@ namespace octet {
       void init_lamp(ref<visual_scene> &app_scene) {
         // scoring defaults
         score = 10;
-        multiplierBase = 1.0f;
+        multiplier = 1.0f;
         multiplierInc = 1.5f;
 
         // lighting defaults
+        lightIndex = WHITE;
         light_node = new scene_node();
-        light_node->translate(vec3(0.0f, 1.2f, 0.0));
+        light_node->translate(vec3(0.0f, 0.8f, 0.0));
         point_light = new light();
         point_light->set_kind(atom_point);
         point_light->set_color(COLOURS[WHITE]);
+        // does this even work?
+        // may do with the shader, ie the lack of a shader
+        //point_light->set_falloff(45.0f, 0.00001f);
+        //point_light->set_near_far(0.01f, 1.0f);
+        point_light->set_attenuation(0.0f, 0.5f, 0.0f);
         node->add_child(light_node);
         app_scene->add_light_instance(new light_instance(light_node, point_light));
       }
 
+      // upgrade the lamp; multiplyer and the light
+      void upgrade(){
+        if (lightIndex < COLOURS->length())
+        point_light->set_color(COLOURS[++lightIndex]);
+        multiplier *= multiplierInc;
+      }
+
+      // 
+      float getHitScore() {
+        printf("Score: %4.2f\n", score);
+        printf("multiplier: %2.4f\n", multiplier);
+        printf("Current colour index: %i", lightIndex);
+        return score * multiplier;
+      }
+
     };
 
-    const vec4  Lamp::COLOURS[5] = { 
-      vec4(1.0f, 1.0f, 1.0f, 1.0f),   // white
-      vec4(0.0f, 1.0f, 0.0f, 1.0f),   // green
-      vec4(0.0f, 0.0f, 1.0f, 1.0f),   // blue
-      vec4(0.5f, 0.0f, 1.0f, 1.0f),   // purple
-      vec4(1.0f, 0.5f, 0.0f, 1.0f) }; // orange
+    const vec4 Lamp::COLOURS[5] = {  // with buffers
+      vec4(1.0f, 1.0f, 1.0f, 1.0f) * 0.5f,   // white
+      vec4(0.0f, 1.0f, 0.0f, 1.0f) * 0.5f,   // green
+      vec4(0.0f, 0.0f, 1.0f, 1.0f) * 0.5f,   // blue
+      vec4(0.5f, 0.0f, 1.0f, 1.0f) * 0.5f,   // purple
+      vec4(1.0f, 0.5f, 0.0f, 1.0f) * 0.5f }; // orange
   }
 
 
