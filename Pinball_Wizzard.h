@@ -10,8 +10,8 @@
 #include "Pinball.h"
 #include "Flipper.h"
 #include "Cylinder3D.h"
-#include <Xinput.h>
 #include "XboxController.h"
+#include "Lamp.h"
 
 namespace octet {
   namespace pinball {
@@ -319,7 +319,7 @@ namespace octet {
             float radii, height;
             radii = size[0];
             height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, radii, height, lamp_mat, 0.0));
+            table_boxes.push_back(new Lamp(node_part, radii, height, lamp_mat, mesh_part, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
             table_boxes[i]->setMesh(mesh_part);
 
