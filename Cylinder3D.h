@@ -15,7 +15,7 @@ namespace octet {
 
     /// Cylinder3D class, a simple 3d cylinder, dynamic
     class Cylinder3D : public Object3D {
-    private:
+    protected:
       float radii;
       float height;
       mesh_cylinder *meshCylinder;
@@ -59,7 +59,7 @@ namespace octet {
         // init mesh_box and scene node
         meshCylinder = new mesh_cylinder(zcylinder(vec3(), radii, height));
         node = new scene_node(modelToWorld, atom_);
-        rigidbody->setUserPointer(this);
+        rigidbody->getc
       }
 
       /// Adds the mesh and rigidbody of the cylinder to the scene

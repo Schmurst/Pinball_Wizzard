@@ -22,9 +22,12 @@ namespace octet {
       scene_node *light_node;
       light *point_light;
 
-      // colours for the lights
+      mesh_instance *mesh_instance_;
+
+      // colours for the materials
+      static const int NUM_COLOURS = 5;
       enum {WHITE = 0, GREEN, BLUE, PURPLE, ORANGE};
-      static const vec4 COLOURS[5];
+      static const vec4 COLOURS[NUM_COLOURS];
 
     public:
 
@@ -52,27 +55,27 @@ namespace octet {
         // lighting defaults
         lightIndex = WHITE;
         light_node = new scene_node();
-        light_node->translate(vec3(0.0f, 0.8f, 0.0));
+        light_node->translate(vec3(0.0f, 2.0f, 0.0));
         point_light = new light();
-        point_light->set_kind(atom_point);
+        point_light->set_kind(atom_spot);
         point_light->set_color(COLOURS[WHITE]);
-        // does this even work?
-        // may do with the shader, ie the lack of a shader
-        //point_light->set_falloff(45.0f, 0.00001f);
-        //point_light->set_near_far(0.01f, 1.0f);
-        point_light->set_attenuation(0.0f, 0.5f, 0.0f);
+        point_light->set_attenuation(0.0f, 0.1f, 0.0f);
         node->add_child(light_node);
         app_scene->add_light_instance(new light_instance(light_node, point_light));
+
+        rigidbody->setUserPointer(this);
       }
 
       // upgrade the lamp; multiplyer and the light
       void upgrade(){
-        if (lightIndex < COLOURS->length())
-        point_light->set_color(COLOURS[++lightIndex]);
-        multiplier *= multiplierInc;
+        printf("upgrade called");
+        if (lightIndex < NUM_COLOURS){
+          multiplier *= multiplierInc;
+          mesh_instance_->set_material(new material(COLOURS[++lightIndex]));
+        }
       }
 
-      // 
+      // gets the score
       float getHitScore() {
         printf("Score: %4.2f\n", score);
         printf("multiplier: %2.4f\n", multiplier);
@@ -80,9 +83,28 @@ namespace octet {
         return score * multiplier;
       }
 
+      /// Adds the mesh and rigidbody of the cylinder to the scene, overidden to maintain the mesh instance
+      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
+        dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) override {
+        btWorld.addRigidBody(rigidbody);
+        rigidBodies.push_back(rigidbody);
+        sceneNodes.push_back(node);
+        printf("Cylinder3D added to scene\n");
+        if (is_visible && colladaMesh == NULL) {
+          appScene->add_mesh_instance(new mesh_instance(node, meshCylinder, mat));
+        }
+        else if (is_visible && colladaMesh != NULL) {
+          mesh_instance_ = new mesh_instance(node, colladaMesh, mat);
+          appScene->add_mesh_instance(mesh_instance_);
+        }
+        if (make_child) {
+          appScene->add_child(node);
+        }
+      }
+
     };
 
-    const vec4 Lamp::COLOURS[5] = {  // with buffers
+      const vec4 Lamp::COLOURS[NUM_COLOURS] = {  // with buffers
       vec4(1.0f, 1.0f, 1.0f, 1.0f) * 0.5f,   // white
       vec4(0.0f, 1.0f, 0.0f, 1.0f) * 0.5f,   // green
       vec4(0.0f, 0.0f, 1.0f, 1.0f) * 0.5f,   // blue

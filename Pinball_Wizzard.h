@@ -222,13 +222,13 @@ namespace octet {
         table_parts.push_back("ScrollGuide");
         table_parts.push_back("ScrollReflector");
 
-        // new texture shader taht handles attenuation
-        param_shader *atten_shader = new param_shader("shaders/default.vs", "shaders/attenuation_texture.fs");
+        // new texture shader that handles attenuation
+        param_shader *atten_shader = new param_shader("shaders/attenuation_texture.vs", "shaders/attenuation_texture.fs");
 
         // Materials
-        material *lamp_mat = new material(new image("assets/Pinball_Wizzard/LampTexture.gif"), NULL, NULL);
-        material *table_mat = new material(new image("assets/Pinball_Wizzard/BookTexture.gif"), NULL, NULL);
-        material *scroll_mat = new material(new image("assets/Pinball_Wizzard/scrollTexture.gif"), NULL, NULL);
+        material *lamp_mat = new material(vec4(0.5f, 0.5f, 0.5f, 1.0f));
+        material *table_mat = new material(new image("assets/Pinball_Wizzard/BookTexture.gif"), NULL, atten_shader, true);
+        material *scroll_mat = new material(new image("assets/Pinball_Wizzard/scrollTexture.gif"), NULL, atten_shader, true);
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
         material *wizzard_mat = new material(vec4(0.1f, 0.6f, 0.1f, 1.0f));
@@ -493,12 +493,18 @@ namespace octet {
               if (soundDingDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBumper();
                 soundDingDelay += 15;
-                
-                //if (objA == LAMP) {
-                //  Lamp *pLamp = static_cast<Lamp*>(contactManifold->getBody0()->getUserPointer());
-                //}
+                Lamp *pLamp;
+                if (objA == LAMP) {
+                  pLamp = static_cast<Lamp*>(contactManifold->getBody0()->getUserPointer());
+                  pLamp->upgrade();
+                }
+                else{
+                  pLamp = static_cast<Lamp*>(contactManifold->getBody1()->getUserPointer());
+                  pLamp->upgrade();
+                  }
+                }
               }
-            }
+            
             else if (objA == LAUNCHER || objB == LAUNCHER) {
               if (runtime_debug) printf("The pinball has hit the Launcher\n");
               if (soundBounceDelay == 0 && pinball.isImpact()) {
