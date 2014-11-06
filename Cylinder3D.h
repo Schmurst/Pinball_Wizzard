@@ -59,7 +59,7 @@ namespace octet {
         // init mesh_box and scene node
         meshCylinder = new mesh_cylinder(zcylinder(vec3(), radii, height));
         node = new scene_node(modelToWorld, atom_);
-        rigidbody->getc
+        rigidbody->setUserPointer(this);
       }
 
       /// Adds the mesh and rigidbody of the cylinder to the scene

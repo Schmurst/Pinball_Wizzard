@@ -68,8 +68,8 @@ namespace octet {
 
       // upgrade the lamp; multiplyer and the light
       void upgrade(){
-        printf("upgrade called");
-        if (lightIndex < NUM_COLOURS){
+        printf("upgrade called index is: %i", lightIndex);
+        if (lightIndex < NUM_COLOURS - 1){
           multiplier *= multiplierInc;
           mesh_instance_->set_material(new material(COLOURS[++lightIndex]));
         }

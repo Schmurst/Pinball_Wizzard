@@ -84,7 +84,7 @@ namespace octet {
 
         // collision values
         speed_check = 0.8f;
-        maxSpeed = 50.0f;
+        maxSpeed = 60.0f;
       }
 
       /// Adds the mesh and rigidbody of the sphere to the scene

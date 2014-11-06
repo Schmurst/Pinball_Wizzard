@@ -37,21 +37,22 @@ namespace octet {
       ref<mesh_text> text;
 
       // Score and multiplyer
-      float mulitiplyer = 1.0f;
+      float multiplier = 1.0f;
       float score = 0.0f;
       float score_scroll = 20.0f;
-      float multi_scroll = 0.5f;
       float score_lamp = 50.0f;
-      float multi_lamp = 0.1f;
       float score_launch = 100.0f;
-      float multi_launch = 1.0f;
+      int frame_count = 0; // to avoid first frame count addition
 
       // debugs
       bool collada_debug = true;
       bool runtime_debug = false;
 
       // create an enum used to specify certain object types for collision logic
-      enum obj_types { PINBALL = 0, FLIPPER = 1, TABLE = 2, BARRIER = 3, FACE = 4, LAUNCHER = 5, LAMP = 6, SCROLL = 7 };
+      enum obj_types {
+        PINBALL = 0, FLIPPER, TABLE, BARRIER, FACE, LAUNCHER, SCROLL,
+        LAMP01, LAMP02, LAMP03, LAMP04, LAMP05, LAMP06, LAMPL, LAMPR
+      };
 
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
@@ -59,6 +60,7 @@ namespace octet {
       int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
       int soundPopDelay = 0, speedUpdateDelay = 0, soundDingDelay = 0, soundBounceDelay = 0;
       int flipperCoolDown = 15; // frames between flips
+      dynarray<Lamp*> lamp_pointers;
 
       // skybox
       scene_node *skybox_node;
@@ -130,29 +132,19 @@ namespace octet {
         pinball.getRigidBody()->setDamping(0.05f, 0.05f);
         pinball.getRigidBody()->setUserIndex(PINBALL);
 
-        // add a light ontop of the ball
-        //scene_node *node_lamp_light = new scene_node();
-        //light *lamp_light = new light();
-        //lamp_light->set_color(vec4(0, 0.8f, 0, 1.0f));
-        //lamp_light->set_near_far(0.2f, 2.0f);
-        //lamp_light->set_attenuation(1.0f, 5.0f, 10.0f);
-        //pinball.getNode()->add_child(node_lamp_light);
-        //node_lamp_light->translate(vec3(0, 0, 0.8f));
-        //app_scene->add_light_instance(new light_instance(node_lamp_light, lamp_light));
-
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
-        float torqueImpluse = 250.0f;
+        float torqueImpluse = 280.0f;
         float initialOffset = 10.0f;
         float halfheightFlipper = 0.4f;
         float halfwidthFlipper = 0.1f;
         float halflengthFlipper = 1.0f;
         float massFlipper = 8.0f;
-        float flipperRestitution = 0.8f;
+        float flipperRestitution = 1.0f;
         material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
         btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, halfheightFlipper * -1.2f);
         btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, halfheightFlipper * -1.2f);
-        btVector3 tableOffsetR = btVector3( 0.6f, -11.3f, 0.4f);
+        btVector3 tableOffsetR = btVector3(0.6f, -11.3f, 0.4f);
         btVector3 tableOffsetL = btVector3(-3.6f, -11.3f, 0.4f);
         vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 
@@ -194,10 +186,10 @@ namespace octet {
 
         // part list, taken from collada file, very important to keep uptodate
         dynarray <string> table_parts;
-        table_parts.push_back("Table");       
-        table_parts.push_back("BarrierLeft");   
-        table_parts.push_back("BarrierRight");  
-        table_parts.push_back("BarrierTop");    
+        table_parts.push_back("Table");
+        table_parts.push_back("BarrierLeft");
+        table_parts.push_back("BarrierRight");
+        table_parts.push_back("BarrierTop");
         table_parts.push_back("Lamp001");
         table_parts.push_back("Lamp002");
         table_parts.push_back("Lamp003");
@@ -206,12 +198,12 @@ namespace octet {
         table_parts.push_back("Lamp006");
         table_parts.push_back("LampLeft");
         table_parts.push_back("LampRight");
-        table_parts.push_back("EyeLeft"); 
+        table_parts.push_back("EyeLeft");
         table_parts.push_back("EyeRight");
-        table_parts.push_back("BrowLeft");   
-        table_parts.push_back("BrowRight");              
-        table_parts.push_back("Launcher");      
-        table_parts.push_back("Mouth");   
+        table_parts.push_back("BrowLeft");
+        table_parts.push_back("BrowRight");
+        table_parts.push_back("Launcher");
+        table_parts.push_back("Mouth");
         table_parts.push_back("Glass");
         table_parts.push_back("Scroll001");
         table_parts.push_back("Scroll002");
@@ -261,7 +253,9 @@ namespace octet {
         printf("x: %f y: %f z: %f \n", x[0], x[1], x[2]);
         printf("x: %f y: %f z: %f \n", y[0], y[1], y[2]);
         printf("x: %f y: %f z: %f \n", z[0], z[1], z[2]);
-        
+
+        int numLamps = 0;
+
         // now for the table parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
           string temp;
@@ -318,26 +312,17 @@ namespace octet {
             table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(LAUNCHER);
           }
-          else if (table_parts[i].find("Lamp") != -1 ) {
+          else if (table_parts[i].find("Lamp") != -1) {
             float radii, height;
             radii = size[0];
             height = size[2];
             Lamp *lamp = new Lamp(node_part, radii, height, lamp_mat, mesh_part, 0.0f);
             lamp->init_lamp(app_scene);
-
             table_boxes.push_back(lamp);
-            table_boxes[i]->getRigidBody()->setUserIndex(LAMP);
+            table_boxes[i]->getRigidBody()->setUserPointer(lamp);
+            table_boxes[i]->getRigidBody()->setUserIndex(LAMP01 + numLamps++);
             table_boxes[i]->setMesh(mesh_part);
-
-            //// add a light atop the lamp
-            //scene_node *node_lamp_light = new scene_node();
-            //light *lamp_light = new light();
-            //lamp_light->set_kind(atom_point);
-            //lamp_light->set_color(vec4(1.0f, 0.5f, 0, 1.0f));
-            //lamp_light->set_near_far(0.2f, 1.0f);
-            //node_part->add_child(node_lamp_light);
-            //node_lamp_light->translate(vec3(0, 0, 1.2f));
-            //app_scene->add_light_instance(new light_instance(node_lamp_light, lamp_light));
+            lamp_pointers.push_back(lamp);
           }
           else if (table_parts[i].find("Scroll") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, scroll_mat, 0.0f));
@@ -395,12 +380,12 @@ namespace octet {
             table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, true, false);
           }
         }
-          
+
         // this code will loop throught the rigidbodies and set the right restitution for the parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
           if (table_parts[i].find("Scroll") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
-          } 
+          }
 
           if (table_parts[i].find("Lamp") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
@@ -409,7 +394,6 @@ namespace octet {
           if (table_parts[i].find("Mouth") != -1 || table_parts[i].find("Launcher") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(5.0f);
           }
-
         }
 
         ///////////////////////////////////// Hinge Constraints ///////////////////////////////
@@ -418,12 +402,12 @@ namespace octet {
         btRigidBody *table = rigid_bodies[3];
 
         // Add a constraint between flipper and table
-        btHingeConstraint *hingeFlipperRight = new btHingeConstraint( (*table), (*flipperR.getRigidBody()),
-                                                                      tableOffsetR, hingeOffsetR,         // this are the hinge offset vectors
-                                                                      btVector3(0, 0, 1.0f), btVector3(0, 0, 1.0f), false);
-        btHingeConstraint *hingeFlipperLeft = new btHingeConstraint( (*table), (*flipperL.getRigidBody()),
-                                                                      tableOffsetL, hingeOffsetL,       // this are the hinge offset vectors
-                                                                      btVector3(0, 0, 1.0f), btVector3(0, 0, 1.0f), false);
+        btHingeConstraint *hingeFlipperRight = new btHingeConstraint((*table), (*flipperR.getRigidBody()),
+          tableOffsetR, hingeOffsetR,         // this are the hinge offset vectors
+          btVector3(0, 0, 1.0f), btVector3(0, 0, 1.0f), false);
+        btHingeConstraint *hingeFlipperLeft = new btHingeConstraint((*table), (*flipperL.getRigidBody()),
+          tableOffsetL, hingeOffsetL,       // this are the hinge offset vectors
+          btVector3(0, 0, 1.0f), btVector3(0, 0, 1.0f), false);
 
         // set angle limits on the flippers
         hingeFlipperLeft->setLimit(-PI * 0.2f, PI * 0.2f);
@@ -472,6 +456,12 @@ namespace octet {
           speedUpdateDelay += 5;
         }
 
+        frame_count++;
+        // detect frame count and use this to increment score multiplier
+        if (frame_count % 600 == 0){
+          multiplier += 0.1f;
+        }
+
         ///////////////////////////////////// Collisions ///////////////////////////////
 
         int numManifolds = world->getDispatcher()->getNumManifolds();
@@ -481,37 +471,37 @@ namespace octet {
           btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
           int objA = contactManifold->getBody0()->getUserIndex();
           int objB = contactManifold->getBody1()->getUserIndex();
-          
+
 
           // check what has hit what and then play sounds
           if (objA == PINBALL || objB == PINBALL) {
             if (objA == FLIPPER || objB == FLIPPER) {
               if (runtime_debug) printf("The pinball has hit a FLIPPER\n");
-            } 
-            else if (objA == LAMP || objB == LAMP) {
-              if (runtime_debug) printf("The pinball has hit a BUMPER\n");
+            }
+            else if ((objA >= LAMP01 && objA <= LAMPR) || (objB >= LAMP01 && objB <= LAMPR)) {
+              if (runtime_debug) printf("The pinball has hit a LAMP\n");
+              if (runtime_debug) printf("The LAMP index is: %i\n", objB);
               if (soundDingDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBumper();
-                soundDingDelay += 15;
-                Lamp *pLamp;
-                if (objA == LAMP) {
-                  pLamp = static_cast<Lamp*>(contactManifold->getBody0()->getUserPointer());
-                  pLamp->upgrade();
+                soundDingDelay += 10;
+                if (objA >= LAMP01 && objA <= LAMPR) {
+                  if (runtime_debug) printf("objA is a lamp\n");
                 }
-                else{
-                  pLamp = static_cast<Lamp*>(contactManifold->getBody1()->getUserPointer());
-                  pLamp->upgrade();
-                  }
+                else if (objB >= LAMP01 && objB <= LAMPR) {
+                  if (runtime_debug) printf("objB is a lamp\n");
+                  Lamp *plamp = lamp_pointers[objB - 7];
+                  plamp->upgrade();
+                  score += plamp->getHitScore();
                 }
               }
-            
+            }
+
             else if (objA == LAUNCHER || objB == LAUNCHER) {
               if (runtime_debug) printf("The pinball has hit the Launcher\n");
               if (soundBounceDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitLauncher();
                 soundBounceDelay += 15;
-                mulitiplyer += multi_launch;
-                score += score_launch * mulitiplyer;
+                score += score_launch * multiplier;
               }
             }
             else if (objA == FACE || objB == FACE) {
@@ -522,17 +512,16 @@ namespace octet {
               if (soundPopDelay == 0 && pinball.isImpact()) {
                 pinball.playSoundHitBarrier();
                 soundPopDelay += 15;
-                mulitiplyer += multi_scroll;
-                score += score_scroll * mulitiplyer;
+                score += score_scroll * multiplier;
               }
             }
           }
         }
 
-        world->stepSimulation(1.0f / 30);
+        world->stepSimulation(1.0f / 10);
         // limit the speed of the pinball
         pinball.limitSpeed();
-        
+
         ///////////////////////////////////// update mesh positions to RBs ///////////////////////////////
         for (unsigned i = 0; i != rigid_bodies.size(); ++i) {
           btRigidBody *rigid_body = rigid_bodies[i];
@@ -588,15 +577,18 @@ namespace octet {
         ///////////////////////////////////// Draw the UI ///////////////////////////////
         // clear and update text
         text->clear();
-        text->format("SCORE: %8.2f\n" "MULITPLIER: %4.2f\n", score, mulitiplyer);
+        text->format("SCORE: %8.2f\n" "MULITPLIER: %4.2f\n", score, multiplier);
 
         // convert it to a mesh.
         text->update();
 
         // draw the text overlay
         overlay->render(vx, vy);
-
       }
+
     };
+
   }
 }
+
+
