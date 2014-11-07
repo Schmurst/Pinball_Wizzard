@@ -102,7 +102,7 @@ namespace octet {
 
       /// Moves Pinball to position within world
       void reset() {
-        float x = seed->get(8.0f, 10.0f);
+        float x = seed->get(3.5f, 7.5f);
         vec = vec3(x, 1.0f, 1.0f);
         printf("Randomx: %f\n", x);
         trans = btTransform(get_btMatrix3x3(matrix), get_btVector3(vec));

@@ -50,8 +50,8 @@ namespace octet {
 
       // create an enum used to specify certain object types for collision logic
       enum obj_types {
-        PINBALL = 0, FLIPPER, TABLE, BARRIER, FACE, LAUNCHER, SCROLL,
-        LAMP01, LAMP02, LAMP03, LAMP04, LAMP05, LAMP06, LAMPL, LAMPR
+        PINBALL = 0, FLIPPER, TABLE, LAUNCHER, SCROLL, SKULL, HAT,
+        LAMP01, LAMP02, LAMP03, LAMP04, LAMP05, LAMP06, LAMP07, LAMPL, LAMPR
       };
 
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
@@ -133,19 +133,19 @@ namespace octet {
         pinball.getRigidBody()->setUserIndex(PINBALL);
 
         ////////////////////////////////////////////////// FLipper ///////////////////////////////////////////
-        float torqueImpluse = 280.0f;
+        float torqueImpluse = 400.0f;
         float initialOffset = 10.0f;
         float halfheightFlipper = 0.4f;
-        float halfwidthFlipper = 0.1f;
-        float halflengthFlipper = 1.0f;
+        float halfwidthFlipper = 0.2f;
+        float halflengthFlipper = 1.2f;
         float massFlipper = 8.0f;
         float flipperRestitution = 1.0f;
         material *flip_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
         btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, halfheightFlipper * -1.2f);
         btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, halfheightFlipper * -1.2f);
-        btVector3 tableOffsetR = btVector3(0.6f, -11.3f, 0.4f);
-        btVector3 tableOffsetL = btVector3(-3.6f, -11.3f, 0.4f);
+        btVector3 tableOffsetR = btVector3(3.2f, -10.5f, 0.4f);
+        btVector3 tableOffsetL = btVector3(-3.2f, -10.5f, 0.4f);
         vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 
         // add right flipper to the scene
@@ -187,23 +187,15 @@ namespace octet {
         // part list, taken from collada file, very important to keep uptodate
         dynarray <string> table_parts;
         table_parts.push_back("Table");
-        table_parts.push_back("BarrierLeft");
-        table_parts.push_back("BarrierRight");
-        table_parts.push_back("BarrierTop");
         table_parts.push_back("Lamp001");
         table_parts.push_back("Lamp002");
         table_parts.push_back("Lamp003");
         table_parts.push_back("Lamp004");
         table_parts.push_back("Lamp005");
         table_parts.push_back("Lamp006");
-        table_parts.push_back("LampLeft");
-        table_parts.push_back("LampRight");
-        table_parts.push_back("EyeLeft");
-        table_parts.push_back("EyeRight");
-        table_parts.push_back("BrowLeft");
-        table_parts.push_back("BrowRight");
-        table_parts.push_back("Launcher");
-        table_parts.push_back("Mouth");
+        table_parts.push_back("Lamp007");
+        table_parts.push_back("LauncherL");
+        table_parts.push_back("LauncherR");
         table_parts.push_back("Glass");
         table_parts.push_back("Scroll001");
         table_parts.push_back("Scroll002");
@@ -211,8 +203,14 @@ namespace octet {
         table_parts.push_back("Scroll004");
         table_parts.push_back("Scroll005");
         table_parts.push_back("Scroll006");
-        table_parts.push_back("ScrollGuide");
-        table_parts.push_back("ScrollReflector");
+        table_parts.push_back("Scroll007");
+        table_parts.push_back("ScrollReflectorL");
+        table_parts.push_back("ScrollReflectorR");
+        table_parts.push_back("SkullL");
+        table_parts.push_back("SkullR");
+        table_parts.push_back("HatL");
+        table_parts.push_back("HatR");
+        
 
         // new texture shader that handles attenuation
         param_shader *atten_shader = new param_shader("shaders/attenuation_texture.vs", "shaders/attenuation_texture.fs");
@@ -223,7 +221,7 @@ namespace octet {
         material *scroll_mat = new material(new image("assets/Pinball_Wizzard/scrollTexture.gif"), NULL, atten_shader, true);
         material *barrier_mat = new material(vec4(0.8f, 0.5f, 0.2f, 1.0f));
         material *bumper_mat = new material(vec4(0.5f, 0.8f, 0.2f, 1.0f));
-        material *wizzard_mat = new material(vec4(0.1f, 0.6f, 0.1f, 1.0f));
+        material *wizzard_mat = new material(vec4(0.2f, 0.6f, 0.1f, 1.0f));
         material *error_mat = new material(vec4(1.0f, 0, 0, 1.0f));
 
         // put the meshes and nodes in the scene... hopefully
@@ -278,6 +276,14 @@ namespace octet {
               temp += "+paper-material";
               mesh_part = dict.get_mesh(temp);
             }
+            else if (temp.find("Hat") != -1) {
+              temp += "+Hat-material";
+              mesh_part = dict.get_mesh(temp);
+            }
+            else if (temp.find("Skull") != -1) {
+              temp += "+Skull-material";
+              mesh_part = dict.get_mesh(temp);
+            }
           }
 
           // create axis_aligned bounding box
@@ -291,22 +297,6 @@ namespace octet {
           if (table_parts[i].find("Table") != -1 || table_parts[i].find("Glass") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, table_mat, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(TABLE);
-          }
-          else if (table_parts[i].find("Barrier") != -1) {
-            table_boxes.push_back(new Box3D(node_part, size, barrier_mat, 0.0f));
-            table_boxes[i]->getRigidBody()->setUserIndex(BARRIER);
-          }
-          else if (table_parts[i].find("Brow") != -1) {
-            table_boxes.push_back(new Box3D(node_part, size, wizzard_mat, 0.0f));
-            table_boxes[i]->getRigidBody()->setUserIndex(FACE);
-          }
-          else if (table_parts[i].find("Eye") != -1 || table_parts[i].find("Mouth") != -1) {
-            float radii, height;
-            radii = size[0];
-            height = size[2];
-            table_boxes.push_back(new Cylinder3D(node_part, radii, height, bumper_mat, 0.0f));
-            table_boxes[i]->getRigidBody()->setUserIndex(FACE);
-            table_boxes[i]->setMesh(mesh_part);
           }
           else if (table_parts[i].find("Launcher") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, error_mat, 0.0f));
@@ -326,6 +316,14 @@ namespace octet {
           }
           else if (table_parts[i].find("Scroll") != -1) {
             table_boxes.push_back(new Box3D(node_part, size, scroll_mat, 0.0f));
+            table_boxes[i]->getRigidBody()->setUserIndex(SCROLL);
+            table_boxes[i]->setMesh(mesh_part);
+          }
+          else if (table_parts[i].find("Skull") != -1 || table_parts[i].find("Hat") != -1) {
+            float radii, height;
+            radii = size[0];
+            height = size[2];
+            table_boxes.push_back(new Cylinder3D(node_part, radii, height, wizzard_mat, 0.0f));
             table_boxes[i]->getRigidBody()->setUserIndex(SCROLL);
             table_boxes[i]->setMesh(mesh_part);
           }
@@ -373,7 +371,7 @@ namespace octet {
           btRigidBody *rigidbody = table_boxes[i]->getRigidBody();
           rigidbody->setWorldTransform(tableTransform * partTransform);
 
-          if (table_parts[i].find("Glass") != -1 || table_parts[i].find("Barrier") != -1) {
+          if (table_parts[i].find("Glass") != -1 || table_parts[i].find("Launcher") != -1) {
             table_boxes[i]->add_to_scene(nodes, app_scene, (*world), rigid_bodies, false, false);
           }
           else {
@@ -385,14 +383,18 @@ namespace octet {
         for (unsigned int i = 0; i < table_parts.size(); i++) {
           if (table_parts[i].find("Scroll") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(0.8f);
-          }
-
-          if (table_parts[i].find("Lamp") != -1) {
+          } 
+          else if (table_parts[i].find("Lamp") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
+            if (table_parts[i].find("Left") != -1 || table_parts[i].find("Right") != -1){
+              table_boxes[i]->getRigidBody()->setRestitution(0.2f);
+            }
           }
-
-          if (table_parts[i].find("Mouth") != -1 || table_parts[i].find("Launcher") != -1) {
+          else if (table_parts[i].find("Launcher") != -1 || table_parts[i].find("Skull") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(5.0f);
+          }
+          else if (table_parts[i].find("table") != -1) {
+            table_boxes[i]->getRigidBody()->setFriction(0.2f);
           }
         }
 
@@ -489,7 +491,7 @@ namespace octet {
                 }
                 else if (objB >= LAMP01 && objB <= LAMPR) {
                   if (runtime_debug) printf("objB is a lamp\n");
-                  Lamp *plamp = lamp_pointers[objB - 7];
+                  Lamp *plamp = lamp_pointers[objB - LAMP01];
                   plamp->upgrade();
                   score += plamp->getHitScore();
                 }
@@ -504,9 +506,6 @@ namespace octet {
                 score += score_launch * multiplier;
               }
             }
-            else if (objA == FACE || objB == FACE) {
-              if (runtime_debug) printf("The pinball has hit the FACE\n");
-            }
             else if (objA == SCROLL || objB == SCROLL) {
               if (runtime_debug) printf("The pinball has hit the BARRIER\n");
               if (soundPopDelay == 0 && pinball.isImpact()) {
@@ -518,7 +517,7 @@ namespace octet {
           }
         }
 
-        world->stepSimulation(1.0f / 10);
+        world->stepSimulation(1.0f / 5);
         // limit the speed of the pinball
         pinball.limitSpeed();
 
@@ -587,7 +586,6 @@ namespace octet {
       }
 
     };
-
   }
 }
 
