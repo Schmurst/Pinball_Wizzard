@@ -85,7 +85,7 @@ namespace octet {
 
       /// Adds the mesh and rigidbody of the cylinder to the scene, overidden to maintain the mesh instance
       void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
-        dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) override {
+        dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true)  {
         btWorld.addRigidBody(rigidbody);
         rigidBodies.push_back(rigidbody);
         sceneNodes.push_back(node);

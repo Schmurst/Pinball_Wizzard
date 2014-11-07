@@ -53,6 +53,20 @@ namespace octet {
         node = new scene_node(modelToWorld, atom_);
       }
 
+      /// only adds the mesh to the scene no rigidbody
+      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, bool is_visible = true, bool make_child = true) {
+        sceneNodes.push_back(node);
+        if (is_visible && colladaMesh == NULL) {
+          appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
+        }
+        else if (is_visible && colladaMesh != NULL) {
+          appScene->add_mesh_instance(new mesh_instance(node, colladaMesh, mat));
+        }
+        if (make_child) {
+          appScene->add_child(node);
+        }
+      }
+
       /// Adds the mesh and rigidbody of the box to the scene
       void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
                         dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) {
