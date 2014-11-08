@@ -59,6 +59,15 @@ namespace octet {
       float score_launch = 100.0f;
       int frame_count = 0; // to avoid first frame count addition
 
+      // Gamepad state setup
+      // button ids, order matters here
+      XboxController pad;
+      const static enum BUTTONIDS { A = 0, B, X, Y, DPad_Up, DPad_Down,
+        DPad_Left, DPad_Right, L_Shoulder, R_Shoulder, L_Thumbstick,
+        R_Thumbstick, Start, Back
+      };
+
+
       // debugs
       bool collada_debug = true;
       bool runtime_debug = false;
@@ -462,7 +471,6 @@ namespace octet {
 
         ///////////////////////////////////// XBOX Pad ///////////////////////////////
         // create an xbox controller object
-        XboxController pad;
         printf((pad.isConnected()) ? "Pad is connected\n" : "Pad is NOT connected");
       }
 
@@ -487,6 +495,14 @@ namespace octet {
         if (frame_count % 600 == 0){
           multiplier += 0.1f;
         }
+        ///////////////////////////////////// Xbox Pad ///////////////////////////////
+        // update the pad state
+        pad.Update();
+
+        if (pad.isButtonPressed(A)){
+          printf("A is being pressed");
+        }
+        
 
         ///////////////////////////////////// Game Logic ///////////////////////////////
 

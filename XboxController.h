@@ -29,19 +29,6 @@ static const WORD BUTTONS[] = {
   XINPUT_GAMEPAD_BACK
 };
 
-struct ButtonIndex{
-  // default constructor
-  ButtonIndex();
-
-  // member veriables
-  int A, B, X, Y;
-  int DPad_Up, DPad_Down, DPad_Left, DPad_Right;
-  int L_Shoulder, R_Shoulder;
-  int L_Thumbstick, R_Thumbstick;
-  int Start;
-  int Back;
-};
-
 class XboxController {
 private:
   XINPUT_STATE state;
@@ -76,9 +63,9 @@ public:
     state = GetState();
   }
 
-  // returns whether a button was pressed
+  // returns whether a button was pressed int refering to the button must be passed
   bool isButtonPressed(int button) {
-
+    return (state.Gamepad.wButtons & BUTTONS[button]) ? true : false;
   }
 
   /// These functions are for the triggers to be used as buttons
@@ -96,8 +83,4 @@ public:
 
 };
 
-#endif 
-
-// externally refer to the button indexs as XButtonIDs
-// this allows for button checking within other classes
-extern ButtonIndex XButtonIDs;
+#endif
