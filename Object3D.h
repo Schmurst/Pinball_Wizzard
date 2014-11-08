@@ -52,7 +52,7 @@ namespace octet {
 
       /// pure virtual function used make class abstract
       virtual void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
-                                dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) = 0;
+        dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) = 0;
 
       /// returns rigidbody
       btRigidBody* getRigidBody() {

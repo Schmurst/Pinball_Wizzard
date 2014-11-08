@@ -14,7 +14,7 @@ namespace octet {
   namespace pinball {
 
     class Lamp : public Cylinder3D {
-    private: 
+    private:
       float score;
       float multiplier;
       float multiplierInc;
@@ -26,7 +26,7 @@ namespace octet {
 
       // colours for the materials
       static const int NUM_COLOURS = 5;
-      enum {WHITE = 0, GREEN, BLUE, PURPLE, ORANGE};
+      enum { WHITE = 0, GREEN, BLUE, PURPLE, ORANGE };
       static const vec4 COLOURS[NUM_COLOURS];
 
     public:
@@ -37,7 +37,7 @@ namespace octet {
 
       // default deconstructor
       ~Lamp() {
-        }
+      }
 
       Lamp(scene_node *node, float rad, float half_height, material *cylinder_material, mesh *_mesh, float cylinder_mass = 1.0f) {
         colladaMesh = _mesh;
@@ -104,7 +104,7 @@ namespace octet {
 
     };
 
-      const vec4 Lamp::COLOURS[NUM_COLOURS] = {  // with buffers
+    const vec4 Lamp::COLOURS[NUM_COLOURS] = {  // with buffers
       vec4(1.0f, 1.0f, 1.0f, 1.0f) * 0.5f,   // white
       vec4(0.0f, 1.0f, 0.0f, 1.0f) * 0.5f,   // green
       vec4(0.0f, 0.0f, 1.0f, 1.0f) * 0.5f,   // blue

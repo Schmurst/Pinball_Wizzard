@@ -27,7 +27,7 @@ namespace octet {
 
       // used to compare speeds and collsisions
       btScalar current_speed;
-      btScalar previous_speed; 
+      btScalar previous_speed;
       float speed_check;
       btScalar maxSpeed;
 
@@ -103,7 +103,7 @@ namespace octet {
 
       /// Adds the mesh and rigidbody of the sphere to the scene
       void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
-                        dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) {
+        dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) {
         btWorld.addRigidBody(rigidbody);
         rigidBodies.push_back(rigidbody);
         sceneNodes.push_back(node);
@@ -188,7 +188,7 @@ namespace octet {
       bool isImpact() {
         btVector3 velocity = rigidbody->getInterpolationLinearVelocity();
         current_speed = velocity.length();
-        
+
         //printf("pinball Current Speed: %f\n", current_speed);
         //printf("pinball prev Speed: %f\n", previous_speed);
 
@@ -196,8 +196,13 @@ namespace octet {
         return (acceleration >= speed_check) ? true : false;
       }
 
-    };
+      /// Returns false if ball has dropped (Ypos < -10.0)
+      bool isDropped() {
+        float Ypos = rigidbody->getWorldTransform().getOrigin()[2];
+        return (Ypos > 15.0) ? true : false;
+      }
 
+    };
   }
 }
 

@@ -5,6 +5,20 @@
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
 
+/*
+game logic:
+-game comes on
+-presented with controls
+--user elects to start game (xbox)
+---user reaches a certain score
+----xpad controls are scrambled
+---user drops ball
+----user has balls left
+-----user is allowed to reset pinball (xbox)
+----user doesnt have any balls left
+-----user is presented with score and logic goes to top
+*/
+
 #include "Object3D.h"
 #include "Box3D.h"
 #include "Pinball.h"
@@ -12,6 +26,7 @@
 #include "Cylinder3D.h"
 #include "XboxController.h"
 #include "Lamp.h"
+#include <Xinput.h>
 
 namespace octet {
   namespace pinball {
@@ -36,7 +51,7 @@ namespace octet {
       ref<text_overlay> overlay;
       ref<mesh_text> text;
 
-      // Score and multiplyer
+      // Score and multiplier
       float multiplier = 1.0f;
       float score = 0.0f;
       float score_scroll = 20.0f;
@@ -47,6 +62,11 @@ namespace octet {
       // debugs
       bool collada_debug = true;
       bool runtime_debug = false;
+
+      // Game logic controls
+      const int BALLS = 3;
+      int currentBalls = BALLS;
+      const enum GAMESTATE {INTRO = 0, PLAY, DROP, END};
 
       // create an enum used to specify certain object types for collision logic
       enum obj_types {
@@ -144,7 +164,7 @@ namespace octet {
         btVector3 hingeOffsetR = btVector3(halflengthFlipper * 0.95f, 0, halfheightFlipper * -1.2f);
         btVector3 hingeOffsetL = btVector3(halflengthFlipper * -0.95f, 0, halfheightFlipper * -1.2f);
         btVector3 tableOffsetR = btVector3(3.8f, -11.0f, 0.4f);
-        btVector3 tableOffsetL = btVector3(-3.8, -11.0f, 0.4f);
+        btVector3 tableOffsetL = btVector3(-3.8f, -11.0f, 0.4f);
         vec3 sizeFlipper = vec3(halflengthFlipper, halfwidthFlipper, halfheightFlipper);
 
         // add right flipper to the scene
@@ -209,7 +229,7 @@ namespace octet {
         table_parts.push_back("SkullR");
         table_parts.push_back("HatL");
         table_parts.push_back("HatR");
-        
+
 
         // new texture shader that handles attenuation
         param_shader *atten_shader = new param_shader("shaders/attenuation_texture.vs", "shaders/attenuation_texture.fs");
@@ -253,7 +273,7 @@ namespace octet {
         printf("x: %f y: %f z: %f \n", y[0], y[1], y[2]);
         printf("x: %f y: %f z: %f \n", z[0], z[1], z[2]);
 
-        int numLamps = 0; 
+        int numLamps = 0;
 
         // now for the table parts
         for (unsigned int i = 0; i < table_parts.size(); i++) {
@@ -326,7 +346,7 @@ namespace octet {
             height = size[2];
             if (table_parts[i].find("Skull") != -1) {
               table_boxes.push_back(new Cylinder3D(node_part, radii, height, skull_mat, 0.0f));
-            } 
+            }
             else {
               table_boxes.push_back(new Cylinder3D(node_part, radii, height, hat_mat, 0.0f));
             }
@@ -391,7 +411,7 @@ namespace octet {
             if (table_parts[i].find("Left") != -1 || table_parts[i].find("Right") != -1) {
               table_boxes[i]->getRigidBody()->setRestitution(0.2f);
             }
-          } 
+          }
           else if (table_parts[i].find("Lamp") != -1) {
             table_boxes[i]->getRigidBody()->setRestitution(1.5f);
           }
@@ -424,15 +444,14 @@ namespace octet {
         world->addConstraint(hingeFlipperLeft);
         world->addConstraint(hingeFlipperRight);
 
-
         //////////////////////////////// General setup /////////////////////////
 
         // add the skybox sphere to the world no rigidbody
         modelToWorld.loadIdentity();
-        modelToWorld.rotateY90();
+        modelToWorld.rotateX90();
         material *skybox_mat = new material(new image("assets/Pinball_Wizzard/largeGalField.gif"));
         skybox_node = new scene_node(modelToWorld, atom_);
-        mesh_sphere *skybox_mesh = new mesh_sphere(vec3(0), 60.0f);
+        mesh_sphere *skybox_mesh = new mesh_sphere(vec3(), 40.0f);
         nodes.push_back(skybox_node);
         app_scene->add_mesh_instance(new mesh_instance(skybox_node, skybox_mesh, skybox_mat));
 
@@ -443,8 +462,8 @@ namespace octet {
 
         ///////////////////////////////////// XBOX Pad ///////////////////////////////
         // create an xbox controller object
-        //XboxController xboxPad;
-        //xboxPad.getState() ? printf("The Xbox pad is plugged in") : printf("The Xbox pad is NOT plugged in");
+        XboxController pad;
+        printf((pad.isConnected()) ? "Pad is connected\n" : "Pad is NOT connected");
       }
 
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// draw_world
@@ -467,6 +486,21 @@ namespace octet {
         // detect frame count and use this to increment score multiplier
         if (frame_count % 600 == 0){
           multiplier += 0.1f;
+        }
+
+        ///////////////////////////////////// Game Logic ///////////////////////////////
+
+        if (pinball.isDropped()) {
+          currentBalls--;
+          pinball.playSoundBallDrop();
+          // detect here for game loss
+          if (currentBalls == 0) {
+            printf("Game Over\n");
+          }
+          else {
+            pinball.reset();
+            printf("You have %i Balls remaining", currentBalls);
+          }
         }
 
         ///////////////////////////////////// Collisions ///////////////////////////////
@@ -576,7 +610,6 @@ namespace octet {
 
         // rotate the skybox (skysphere)
         skybox_node->rotate(0.25f / 10, vec3(0, 1, 0));
-        skybox_node->rotate(0.125f / 10, vec3(1, 0, 1));
 
         ///////////////////////////////////// Draw the UI ///////////////////////////////
         // clear and update text
