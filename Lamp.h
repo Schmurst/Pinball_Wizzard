@@ -55,11 +55,11 @@ namespace octet {
         // lighting defaults
         lightIndex = WHITE;
         light_node = new scene_node();
-        light_node->translate(vec3(0.0f, 2.0f, 0.0));
+        light_node->translate(vec3(0, 1.0f, 1.0f));
         point_light = new light();
         point_light->set_kind(atom_spot);
         point_light->set_color(COLOURS[WHITE]);
-        point_light->set_attenuation(0.0f, 0.1f, 0.0f);
+        point_light->set_attenuation(0.0f, 0.3f, 0.0f);
         node->add_child(light_node);
         app_scene->add_light_instance(new light_instance(light_node, point_light));
 
@@ -71,7 +71,7 @@ namespace octet {
         //printf("upgrade called index is: %i\n", lightIndex);
         if (lightIndex < NUM_COLOURS - 1){
           multiplier *= multiplierInc;
-          mesh_instance_->set_material(new material(COLOURS[++lightIndex]));
+          point_light->set_color(COLOURS[++lightIndex]);
         }
       }
 
@@ -87,7 +87,7 @@ namespace octet {
       void resetMultipier() {
         lightIndex = WHITE;
         multiplier = 1.0f;
-        mesh_instance_->set_material(new material(COLOURS[lightIndex]));
+        point_light->set_color(COLOURS[lightIndex]);
       }
 
       /// Adds the mesh and rigidbody of the cylinder to the scene, overidden to maintain the mesh instance

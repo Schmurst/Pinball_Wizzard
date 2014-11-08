@@ -133,13 +133,19 @@ namespace octet {
         // initialise the scene
         app_scene = new visual_scene();
 
+        // new texture shader that handles attenuation
+        param_shader *atten_shader = new param_shader("shaders/attenuation_texture.vs", "shaders/attenuation_texture.fs");
+
         // Add a a fill light to the scene
         scene_node *light_node = new scene_node();
         light *light_fill = new light();
-        light_fill->set_color(vec4(0.0f, 0.0f, 1.0f, 1.0f));
-        light_fill->set_attenuation(1, -6, -8);
-        light_node->rotate(-45, vec3(1, 0, 0));
-        light_node->translate(vec3(20, 0, 20));
+        light_fill->set_kind(atom_spot);
+        light_fill->set_color(vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        light_fill->set_attenuation(1.0f, 0.05f, 0.01f);
+        light_node->translate(vec3(5, 5, 10));
+        app_scene->add_light_instance(new light_instance(light_node, light_fill));
+        light_node->loadIdentity();
+        light_node->translate(vec3(5, -5, -10));
         app_scene->add_light_instance(new light_instance(light_node, light_fill));
 
         // set up deafult camera
@@ -257,12 +263,8 @@ namespace octet {
         table_parts.push_back("HatL");
         table_parts.push_back("HatR");
 
-
-        // new texture shader that handles attenuation
-        param_shader *atten_shader = new param_shader("shaders/attenuation_texture.vs", "shaders/attenuation_texture.fs");
-
         // Materials
-        material *lamp_mat = new material(vec4(0.5f, 0.5f, 0.5f, 1.0f));
+        material *lamp_mat = new material(new image("assets/Pinball_Wizzard/LampTexture.gif"), NULL, atten_shader, true);
         material *table_mat = new material(new image("assets/Pinball_Wizzard/BookTexture.gif"), NULL, atten_shader, true);
         material *scroll_mat = new material(new image("assets/Pinball_Wizzard/scrollTexture.gif"), NULL, atten_shader, true);
         material *skull_mat = new material(new image("assets/Pinball_Wizzard/bone.gif"), NULL, atten_shader, true);
@@ -493,6 +495,8 @@ namespace octet {
         INT64 m_currentTime;
         QueryPerformanceCounter((LARGE_INTEGER *)&m_currentTime);
         seed = new random(m_currentTime);
+
+        printf("Number of lights in the scene: %i", app_scene->get_num_light_instances());
       }
 
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// draw_world
@@ -523,6 +527,7 @@ namespace octet {
         if (score >= magnitudeScore) {
           controlsRandomise();
           magnitudeScore *= 10.0f;
+          pinball.playSoundRandomise();
         }
 
         ///////////////////////////////////// Game Logic ///////////////////////////////

@@ -38,6 +38,7 @@ namespace octet {
       ALuint Welcome;
       ALuint Drop;
       ALuint Flip;
+      ALuint Randomise;
       unsigned current_source;    // current sound source
       unsigned int sound_barrier_check;
       ALuint num_sound_sources = 32;
@@ -79,6 +80,7 @@ namespace octet {
         Bounce = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Bounce.wav");
         Flip = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Flip.wav");
         Welcome = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/Welcome.wav");
+        Randomise = resource_dict::get_sound_handle(AL_FORMAT_MONO16, "assets/Pinball_Wizzard/randomise.wav");
         alGenSources(num_sound_sources, sources);
         sound_barrier_check = 0;
 
@@ -143,6 +145,13 @@ namespace octet {
       void playSoundHitLauncher() {
         ALuint source = get_sound_source();
         alSourcei(source, AL_BUFFER, Bounce);
+        alSourcePlay(source);
+      }
+
+      /// play sound on Launcher hit
+      void playSoundRandomise() {
+        ALuint source = get_sound_source();
+        alSourcei(source, AL_BUFFER, Randomise);
         alSourcePlay(source);
       }
 
