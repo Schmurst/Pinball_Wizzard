@@ -33,6 +33,7 @@ namespace octet {
 
     /// Scene using bullet for physics effects. 
     class Pinball_Wizzard : public app {
+    private:
       // scene for drawing box
       ref<visual_scene> app_scene;
 
@@ -52,9 +53,10 @@ namespace octet {
       ref<mesh_text> righttext;
       ref<mesh_text> lefttext;
 
-      // Score and multiplier
+      // SCORING
       float multiplier = 1.0f;
       float score = 0.0f;
+      float magnitudeScore = 100.0f;
       float score_scroll = 20.0f;
       float score_lamp = 50.0f;
       float score_launch = 100.0f;
@@ -65,13 +67,14 @@ namespace octet {
       XboxController pad;
       const static enum BUTTONIDS { A = 0, B, X, Y, DPad_Up, DPad_Down,
         DPad_Left, DPad_Right, L_Shoulder, R_Shoulder, L_Thumbstick,
-        R_Thumbstick, Start, Back
+        R_Thumbstick, Back, Start
       };
 
       // default controls to start the game
       int controlFlipperL = L_Shoulder;
       int controlFlipperR = R_Shoulder;
       int controlReset = Start;
+      random *seed;
 
       // debugs
       bool collada_debug = true;
@@ -88,6 +91,12 @@ namespace octet {
         PINBALL = 0, FLIPPER, TABLE, LAUNCHER, SCROLL,
         LAMP01, LAMP02, LAMP03, LAMP04, LAMP05, LAMP06, LAMP07, LAMPL, LAMPR
       };
+
+      /// function to randomise the control scheme for the xboxpad
+      void controlsRandomise() {
+        controlFlipperL = seed->get(A, Back);
+        controlFlipperR = seed->get(A, Back);
+      }
 
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
@@ -481,6 +490,8 @@ namespace octet {
         ///////////////////////////////////// XBOX Pad ///////////////////////////////
         // create an xbox controller object
         printf((pad.isConnected()) ? "Pad is connected\n" : "Pad is NOT connected");
+        time_t seed_time;
+        seed->set_seed((unsigned int)seed_time);
       }
 
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// draw_world
@@ -507,7 +518,11 @@ namespace octet {
         ///////////////////////////////////// Xbox Pad ///////////////////////////////
         // update the pad state
         pad.Update();
-        
+
+        if (score > magnitudeScore) {
+          controlsRandomise();
+          magnitudeScore *= 10.0f;
+        }
 
         ///////////////////////////////////// Game Logic ///////////////////////////////
 
