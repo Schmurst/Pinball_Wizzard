@@ -67,6 +67,10 @@ namespace octet {
         R_Thumbstick, Start, Back
       };
 
+      // default controls to start the game
+      int controlFlipperL = L_Shoulder;
+      int controlFlipperR = R_Shoulder;
+      int controlReset = Start;
 
       // debugs
       bool collada_debug = true;
@@ -499,9 +503,6 @@ namespace octet {
         // update the pad state
         pad.Update();
 
-        if (pad.isButtonPressed(A)){
-          printf("A is being pressed");
-        }
         
 
         ///////////////////////////////////// Game Logic ///////////////////////////////
@@ -602,20 +603,20 @@ namespace octet {
 
         if (soundBounceDelay > 0) soundBounceDelay--;
 
-        ///////////////////////////////////// Key handlers ///////////////////////////////
-        if (is_key_down('Z') && flipDelayR == 0) {
-          flipperL.flip();
+        ///////////////////////////////////// button handlers ///////////////////////////////
+        if (pad.isButtonPressed(controlFlipperR) && flipDelayR == 0) {
+          flipperR.flip();
           flipDelayR = flipperCoolDown;
           pinball.playSoundHitFlipper();
         }
 
-        if (is_key_down('M') && flipDelayL == 0) {
-          flipperR.flip();
+        if (pad.isButtonPressed(controlFlipperL) && flipDelayL == 0) {
+          flipperL.flip();
           flipDelayL = flipperCoolDown;
           pinball.playSoundHitFlipper();
         }
 
-        if (is_key_down(' ') && pinballResetDelay == 0) {
+        if (pad.isButtonPressed(controlReset) && pinballResetDelay == 0) {
           pinball.reset();
           pinballResetDelay = flipperCoolDown;
         }
