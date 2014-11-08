@@ -49,7 +49,8 @@ namespace octet {
 
       // Overlay and text drawing
       ref<text_overlay> overlay;
-      ref<mesh_text> text;
+      ref<mesh_text> righttext;
+      ref<mesh_text> lefttext;
 
       // Score and multiplier
       float multiplier = 1.0f;
@@ -80,6 +81,7 @@ namespace octet {
       const int BALLS = 3;
       int currentBalls = BALLS;
       const enum GAMESTATE {INTRO = 0, PLAY, DROP, END};
+      int currentGameState = INTRO;
 
       // create an enum used to specify certain object types for collision logic
       enum obj_types {
@@ -90,7 +92,7 @@ namespace octet {
       // flipper & Pinball declaration is included here as they're common to all scopes/ functions below
       Flipper flipperR, flipperL;
       Pinball pinball;
-      int flipDelayL = 0, flipDelayR = 0, pinballResetDelay = 0;
+      int flipDelayL = 0, flipDelayR = 0;
       int soundPopDelay = 0, speedUpdateDelay = 0, soundDingDelay = 0, soundBounceDelay = 0;
       int flipperCoolDown = 15; // frames between flips
       dynarray<Lamp*> lamp_pointers;
@@ -147,11 +149,14 @@ namespace octet {
         bitmap_font *font = overlay->get_default_font();
 
         // create a box containing text (in pixels)
-        aabb text_aabb(vec3(450.0, 300.0f, 0.0f), vec3(256, 64, 0));
-        text = new mesh_text(font, "sample text", &text_aabb);
+        aabb Rtext_aabb(vec3(480.0, 250.0f, 0.0f), vec3(256, 128, 0));
+        aabb Ltext_aabb(vec3(-100.0, -200.0f, 0.0f), vec3(512, 512, 0));
+        righttext = new mesh_text(font, "sample text", &Rtext_aabb);
+        lefttext = new mesh_text(font, "sample text", &Ltext_aabb);
 
         // add the mesh to the overlay.
-        overlay->add_mesh_text(text);
+        overlay->add_mesh_text(righttext);
+        overlay->add_mesh_text(lefttext);
 
         ////////////////////////////////////////////////// Pinball ///////////////////////////////////////////
         // Add the pinball to the world
@@ -502,21 +507,21 @@ namespace octet {
         ///////////////////////////////////// Xbox Pad ///////////////////////////////
         // update the pad state
         pad.Update();
-
         
 
         ///////////////////////////////////// Game Logic ///////////////////////////////
 
-        if (pinball.isDropped()) {
+        if (pinball.isDropped() && currentGameState == PLAY) {
           currentBalls--;
           pinball.playSoundBallDrop();
           // detect here for game loss
           if (currentBalls == 0) {
+            currentGameState = END;
             printf("Game Over\n");
           }
           else {
-            pinball.reset();
-            printf("You have %i Balls remaining", currentBalls);
+            currentGameState = DROP;
+            printf("You have %i Balls remaining\n", currentBalls);
           }
         }
 
@@ -593,8 +598,6 @@ namespace octet {
 
         if (flipDelayR > 0) flipDelayR--;
 
-        if (pinballResetDelay > 0) pinballResetDelay--;
-
         if (soundPopDelay > 0) soundPopDelay--;
 
         if (speedUpdateDelay > 0) speedUpdateDelay--;
@@ -616,9 +619,30 @@ namespace octet {
           pinball.playSoundHitFlipper();
         }
 
-        if (pad.isButtonPressed(controlReset) && pinballResetDelay == 0) {
-          pinball.reset();
-          pinballResetDelay = flipperCoolDown;
+        if (pad.isButtonPressed(controlReset) && (currentGameState == DROP || currentGameState == INTRO || currentGameState == END)) {
+          switch (currentGameState){
+          case INTRO:
+            pinball.playSoundWelcome();
+            currentGameState = PLAY;
+            pinball.reset();
+            return;
+          case END:
+            currentGameState = INTRO;
+            // pinball play sound
+            for (unsigned int i = 0; i < lamp_pointers.size(); ++i){
+              lamp_pointers[i]->resetMultipier();
+            }
+            score = 0.0f;
+            multiplier = 0.0f;
+            currentBalls = BALLS;
+            return;
+          case DROP:
+            currentGameState = PLAY;
+            pinball.reset();
+            return;
+          default:
+            return;
+          }
         }
 
         // update matrices. assume 30 fps.
@@ -630,16 +654,28 @@ namespace octet {
 
         ///////////////////////////////////// Draw the UI ///////////////////////////////
         // clear and update text
-        text->clear();
-        text->format("SCORE: %8.2f\n" "MULITPLIER: %4.2f\n", score, multiplier);
+        if (currentGameState == PLAY || currentGameState == DROP || currentGameState == END) {
+          righttext->clear();
+          righttext->format("SCORE: %8.2f\n" "MULITPLIER: %4.2f\n" "Balls Left: %i\n", score, multiplier, currentBalls);
+        }
+        else {
+          righttext->clear();
+        }
 
+        if (currentGameState == END || currentGameState == INTRO) {
+          lefttext->clear();
+          lefttext->format("CONTROLS\n" "left Flipper: Lbumper\n" "right Flipper: Rbumper\n" "reset: start\n");
+        }
+        else {
+          lefttext->clear();
+        }
         // convert it to a mesh.
-        text->update();
+        righttext->update();
+        lefttext->update();
 
         // draw the text overlay
         overlay->render(vx, vy);
       }
-
     };
   }
 }

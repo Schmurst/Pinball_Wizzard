@@ -83,6 +83,13 @@ namespace octet {
         return score * multiplier;
       }
 
+      // resets multiplier score
+      void resetMultipier() {
+        lightIndex = WHITE;
+        multiplier = 1.0f;
+        mesh_instance_->set_material(new material(COLOURS[lightIndex]));
+      }
+
       /// Adds the mesh and rigidbody of the cylinder to the scene, overidden to maintain the mesh instance
       void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
         dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true)  {

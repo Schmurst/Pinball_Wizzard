@@ -123,7 +123,6 @@ namespace octet {
         rigidbody->setWorldTransform(trans);
         rigidbody->setLinearVelocity(get_btVector3(vec3(0, 0, 0)));
         rigidbody->setAngularVelocity(get_btVector3(vec3(0, 0, 0)));
-        playSoundWelcome();
       }
 
       /// play sound on barrier hit
