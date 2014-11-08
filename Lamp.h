@@ -68,7 +68,7 @@ namespace octet {
 
       // upgrade the lamp; multiplyer and the light
       void upgrade(){
-        printf("upgrade called index is: %i", lightIndex);
+        //printf("upgrade called index is: %i\n", lightIndex);
         if (lightIndex < NUM_COLOURS - 1){
           multiplier *= multiplierInc;
           mesh_instance_->set_material(new material(COLOURS[++lightIndex]));
@@ -77,9 +77,9 @@ namespace octet {
 
       // gets the score
       float getHitScore() {
-        printf("Score: %4.2f\n", score);
-        printf("multiplier: %2.4f\n", multiplier);
-        printf("Current colour index: %i", lightIndex);
+        //printf("Score: %4.2f\n", score);
+        //printf("multiplier: %2.4f\n", multiplier);
+        //printf("Current colour index: %i\n", lightIndex);
         return score * multiplier;
       }
 

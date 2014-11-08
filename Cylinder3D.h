@@ -83,7 +83,7 @@ namespace octet {
         btWorld.addRigidBody(rigidbody);
         rigidBodies.push_back(rigidbody);
         sceneNodes.push_back(node);
-        printf("Cylinder3D added to scene\n");
+        // printf("Cylinder3D added to scene\n");
         if (is_visible && colladaMesh == NULL) {
           appScene->add_mesh_instance(new mesh_instance(node, meshCylinder, mat));
         }

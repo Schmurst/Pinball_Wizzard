@@ -44,7 +44,7 @@ namespace octet {
         btWorld.addRigidBody(rigidbody);
         rigidBodies.push_back(rigidbody);
         sceneNodes.push_back(node);
-        printf("Box3D added to scene\n");
+        // ("Box3D added to scene\n");
         // below is inefficient, still making node and box and whatever
         if (is_visible) {
           appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));

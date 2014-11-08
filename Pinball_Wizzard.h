@@ -77,7 +77,7 @@ namespace octet {
       random *seed;
 
       // debugs
-      bool collada_debug = true;
+      bool collada_debug = false;
       bool runtime_debug = false;
 
       // Game logic controls
@@ -490,8 +490,9 @@ namespace octet {
         ///////////////////////////////////// XBOX Pad ///////////////////////////////
         // create an xbox controller object
         printf((pad.isConnected()) ? "Pad is connected\n" : "Pad is NOT connected");
-        time_t seed_time;
-        seed->set_seed((unsigned int)seed_time);
+        INT64 m_currentTime;
+        QueryPerformanceCounter((LARGE_INTEGER *)&m_currentTime);
+        seed = new random(m_currentTime);
       }
 
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// draw_world
@@ -519,7 +520,7 @@ namespace octet {
         // update the pad state
         pad.Update();
 
-        if (score > magnitudeScore) {
+        if (score >= magnitudeScore) {
           controlsRandomise();
           magnitudeScore *= 10.0f;
         }
