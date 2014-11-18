@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// (C) Sam Hayhurst 2014
+// Sam Hayhurst 2014
 //
-// Cylinder class, derived from 
+// Cylinder class, derived from Object3D
 //
 
 #ifndef LAMP_INCLUDED
@@ -12,7 +12,9 @@
 
 namespace octet {
   namespace pinball {
-
+    /// Lamp class contains the data for use as bumpers within the pinball Wizzard app.
+    /// contains functions to increment score and mulitiplier.
+    /// containts functionality to change a light above the Lamp object during runtime.
     class Lamp : public Cylinder3D {
     private:
       float score;
@@ -24,28 +26,29 @@ namespace octet {
 
       mesh_instance *mesh_instance_;
 
-      // colours for the materials
+      // colours for the materials.
       static const int NUM_COLOURS = 5;
       enum { WHITE = 0, GREEN, BLUE, PURPLE, ORANGE };
       static const vec4 COLOURS[NUM_COLOURS];
 
     public:
 
-      // deafult blank constructor
+      /// default Lamp Constructor.
       Lamp(){
       }
 
-      // default deconstructor
+      /// default Lamp destructor.
       ~Lamp() {
       }
 
+      /// Alternative constructor used to initialse Lamp using a scene node.
       Lamp(scene_node *node, float rad, float half_height, material *cylinder_material, mesh *_mesh, float cylinder_mass = 1.0f) {
         colladaMesh = _mesh;
         modelToWorld = node->access_nodeToParent();
         init_cylinder(modelToWorld, rad, half_height, cylinder_material, cylinder_mass);
       }
 
-      /// initialises default values for scoring and the attached light
+      /// initialises default values for scoring and the attached light.
       void init_lamp(ref<visual_scene> &app_scene) {
         // scoring defaults
         score = 10;
@@ -66,7 +69,7 @@ namespace octet {
         rigidbody->setUserPointer(this);
       }
 
-      // upgrade the lamp; multiplyer and the light
+      /// upgrade the lamp; multiplyer and the light.
       void upgrade(){
         //printf("upgrade called index is: %i\n", lightIndex);
         if (lightIndex < NUM_COLOURS - 1){
@@ -75,7 +78,7 @@ namespace octet {
         }
       }
 
-      // gets the score
+      /// return the score for a single collision.
       float getHitScore() {
         //printf("Score: %4.2f\n", score);
         //printf("multiplier: %2.4f\n", multiplier);
@@ -83,14 +86,14 @@ namespace octet {
         return score * multiplier;
       }
 
-      // resets multiplier score
+      /// resets the Lamp mulitiplier and the light colour.
       void resetMultipier() {
         lightIndex = WHITE;
         multiplier = 1.0f;
         point_light->set_color(COLOURS[lightIndex]);
       }
 
-      /// Adds the mesh and rigidbody of the cylinder to the scene, overidden to maintain the mesh instance
+      /// Adds the mesh and rigidbody of the cylinder to the scene, overidden to maintain the mesh instance.
       void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
         dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true)  {
         btWorld.addRigidBody(rigidbody);
@@ -111,7 +114,8 @@ namespace octet {
 
     };
 
-    const vec4 Lamp::COLOURS[NUM_COLOURS] = {  // with buffers
+    /// Lamp light colours
+    const vec4 Lamp::COLOURS[NUM_COLOURS] = { 
       vec4(1.0f, 1.0f, 1.0f, 1.0f) * 0.5f,   // white
       vec4(0.0f, 1.0f, 0.0f, 1.0f) * 0.5f,   // green
       vec4(0.0f, 0.0f, 1.0f, 1.0f) * 0.5f,   // blue

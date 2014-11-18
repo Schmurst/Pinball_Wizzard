@@ -1,9 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// (C) Sam Hayhurst 2014
+//  Sam Hayhurst 2014
 //
 // Pinball class, derives from Object3D
-//
+// Contains logic 
 
 #ifndef PINBALL_INCLUDED
 #define PINBALL_INCLUDED
@@ -12,8 +12,9 @@
 
 namespace octet {
   namespace pinball {
-
-    /// Pinball class, a simple 3d sphere, dynamic
+    /// Pinball class used to emulate a pinball for playing Pinball Wizzard.
+    /// contains functionality to get and play sounds and set position.
+    /// Lastly contains functions used to limit speed and detect whether a significant imapct has occured.
     class Pinball : public Object3D {
     private:
       float radii;
@@ -50,14 +51,14 @@ namespace octet {
       }
 
     public:
-      /// Pinball Constructor
+      /// Pinball Constructor.
       Pinball()
       {}
-      /// Pinball Destructor
+      /// Pinball Destructor.
       ~Pinball(){
       }
 
-      /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene
+      /// initialise function, mass defaults to 1.0 to ensure dynamic behavior within the scene.
       void init_sphere(mat4t model2world, float rad, material *sphere_material, float sphere_mass = 1.0f) {
         init(model2world, sphere_material, sphere_mass);
         btCollisionShape *shape = new btSphereShape(btScalar(rad));
@@ -89,21 +90,7 @@ namespace octet {
         maxSpeed = 60.0f;
       }
 
-      /// only adds the mesh to the scene no rigidbody
-      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, bool is_visible = true, bool make_child = true) {
-        sceneNodes.push_back(node);
-        if (is_visible && colladaMesh == NULL) {
-          appScene->add_mesh_instance(new mesh_instance(node, meshSphere, mat));
-        }
-        else if (is_visible && colladaMesh != NULL) {
-          appScene->add_mesh_instance(new mesh_instance(node, colladaMesh, mat));
-        }
-        if (make_child) {
-          appScene->add_child(node);
-        }
-      }
-
-      /// Adds the mesh and rigidbody of the sphere to the scene
+      /// Adds the mesh and rigidbody of the sphere the btcollision world and the app_scene.
       void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
         dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) {
         btWorld.addRigidBody(rigidbody);
@@ -116,7 +103,7 @@ namespace octet {
         }
       }
 
-      /// Moves Pinball to position within world
+      /// Moves Pinball to randomised position within the world
       void reset() {
         float x = seed->get(3.5f, 7.5f);
         vec = vec3(x, 1.0f, 1.0f);
@@ -127,7 +114,7 @@ namespace octet {
         rigidbody->setAngularVelocity(get_btVector3(vec3(0, 0, 0)));
       }
 
-      /// play sound on barrier hit
+      /// play barrier hit sound
       void playSoundHitBarrier() {
         ALuint source = get_sound_source();
         alSourcei(source, AL_BUFFER, Pop);
@@ -176,7 +163,7 @@ namespace octet {
         alSourcePlay(source);
       }
 
-      /// to be called in the btPhysics update function to limit speed
+      /// limits the speed of the Pinball, designed to be called every physics step.
       void limitSpeed() {
         btVector3 velocity = rigidbody->getLinearVelocity();
         btScalar speed = velocity.length();
@@ -186,13 +173,13 @@ namespace octet {
         }
       }
 
-      /// Sets the previous speed of the pinball, called everyphysics step
+      /// sets a previous speed, used in conjunction with isImpact to determine whether an impact is significant.
       void updateSpeed() {
         btVector3 velocity = rigidbody->getInterpolationLinearVelocity();
         previous_speed = velocity.length();
       }
 
-      /// detectes whether a significant impact has been detected
+      /// detectes whether a significant impact has been detected, used in conjunction with updateSpeed.
       bool isImpact() {
         btVector3 velocity = rigidbody->getInterpolationLinearVelocity();
         current_speed = velocity.length();
@@ -204,10 +191,10 @@ namespace octet {
         return (acceleration >= speed_check) ? true : false;
       }
 
-      /// Returns false if ball has dropped (Ypos < -10.0)
+      /// Returns false if ball has dropped ie its y position has dropped below -15.
       bool isDropped() {
-        float Ypos = rigidbody->getWorldTransform().getOrigin()[2];
-        return (Ypos > 15.0) ? true : false;
+        float Ypos = rigidbody->getWorldTransform().getOrigin()[1];
+        return (Ypos < -15.0) ? true : false;
       }
 
     };

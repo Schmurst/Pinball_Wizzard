@@ -29,7 +29,11 @@ static const WORD BUTTONS[] = {
   XINPUT_GAMEPAD_START
 };
 
-class XboxController {
+class XboxController : public octet::resource {
+  /// Xbox Pad class implemented using http://lcmccauley.wordpress.com/2014/01/05/gamepad-input-tutorial/ as a reference.
+  /// only implemeted for one pad and clickable buttons, easily extendable into full class.
+  /// Does require a dedicated enum inside the main app for button indexing.
+
 private:
   XINPUT_STATE state;
   DWORD dwResult;
@@ -63,24 +67,10 @@ public:
     state = GetState();
   }
 
-  // returns whether a button was pressed int refering to the button must be passed
+  /// returns whether a button was pressed int refering to the button must be passed
   bool isButtonPressed(int button) {
     return (state.Gamepad.wButtons & BUTTONS[button]) ? true : false;
   }
-
-  /// These functions are for the triggers to be used as buttons
-  // returns Left trigger value
-  float LeftTrigger() {
-    BYTE Trigger = state.Gamepad.bLeftTrigger;
-    return (Trigger > XINPUT_GAMEPAD_TRIGGER_THRESHOLD) ? Trigger / 255.0f : 0.0f;
-  }
-
-  // returns right trigger value
-  float RightTrigger() {
-    BYTE Trigger = state.Gamepad.bLeftTrigger;
-    return (Trigger > XINPUT_GAMEPAD_TRIGGER_THRESHOLD) ? Trigger / 255.0f : 0.0f;
-  }
-
 };
 
 #endif

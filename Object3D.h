@@ -10,9 +10,10 @@
 
 namespace octet {
   namespace pinball {
-
-    /// Object3D class, a base class from which more advanced shapes are derived
-    class Object3D {
+    /// Object3D class, an abstract class from which more advanced shapes are derived.
+    /// contains functionality for the manipulation of octet scene nodes and meshes and
+    /// bullet rigidbodies.
+    class Object3D : public octet::resource {
     protected:
       mat4t modelToWorld;
       material *mat;
@@ -23,15 +24,15 @@ namespace octet {
       mesh *colladaMesh;  // only to be used when loading meshes from collada
 
     public:
-      /// Empty constructor
+      /// Default Object3D constructor.
       Object3D() {
       }
 
-      /// Destructor
+      /// Default Object3D Destructor.
       ~Object3D() {
       }
 
-      /// initialise the Object3D
+      /// initialise the Object3D.
       void init(mat4t_in model2World, material *mat_object, btScalar mass_object) {
         // assign private data
         colladaMesh = nullptr;
@@ -47,24 +48,21 @@ namespace octet {
         motionState = new btDefaultMotionState(transform);
       }
 
-      /// pure virtual function used to add only meshes to the scene
-      virtual void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, bool is_visible = true, bool make_child = true) = 0;
-
-      /// pure virtual function used make class abstract
+      /// pure virtual function used make class abstract.
       virtual void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
         dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) = 0;
 
-      /// returns rigidbody
+      /// returns a pointer to the rigidbody.
       btRigidBody* getRigidBody() {
         return rigidbody;
       }
 
-      /// returns the node
+      /// returns a pointer to the scene node for the Object.
       scene_node* getNode() {
         return node;
       }
 
-      /// virtual function to allow setting the mesh
+      /// virtual function to allow setting the mesh after initialsation.
       virtual void setMesh(mesh *mesh) {
         colladaMesh = mesh;
       }

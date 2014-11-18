@@ -12,16 +12,19 @@
 
 namespace octet {
   namespace pinball {
-
-    /// Flipper class derived from box to hit phys boxes around the scene
+    /// Flipper class derived from Box3D used to create pinball flippers in pinballWizzard app.
+    /// contains functionality to apply a torque, axis and torque to be defined
+    /// using bullet physics constraints.
     class Flipper : public Box3D {
     private:
       btVector3 flipTorque;
 
     public:
+      /// default Flipper Constructor.
       Flipper() {
       }
 
+      /// Default Flipper Destructor.
       ~Flipper() {
       }
 
@@ -32,10 +35,9 @@ namespace octet {
         rigidbody->setActivationState(DISABLE_DEACTIVATION);    // disables the deactiveation state
       }
 
-      /// This is called by the player to Rotate the flipper.
+      /// This is called by the player to apply a torque to the Flipper object.
       void flip(){
         rigidbody->applyTorqueImpulse(flipTorque);
-        // printf("Flipper function has been activated");
       }
 
       /// Adds the mesh and rigidbody of the box to the scene
@@ -44,8 +46,6 @@ namespace octet {
         btWorld.addRigidBody(rigidbody);
         rigidBodies.push_back(rigidbody);
         sceneNodes.push_back(node);
-        // ("Box3D added to scene\n");
-        // below is inefficient, still making node and box and whatever
         if (is_visible) {
           appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
         }

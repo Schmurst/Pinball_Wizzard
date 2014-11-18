@@ -12,8 +12,8 @@
 
 namespace octet {
   namespace pinball {
-
-    /// Box3D class, simple 3d box class, can be dynamic
+    /// Box3D class used to put solid objects into the scene and rigidbodies into a
+    /// bt dynamics world.
     class Box3D : public Object3D {
     protected:
       mesh_box *meshBox;
@@ -24,23 +24,23 @@ namespace octet {
       Box3D()
       {}
 
-      /// Box3D constructor, using modeltoWorld
+      /// Box3D constructor, using modeltoWorld.
       Box3D(mat4t model2world, vec3 size, material *material_box, float mass_box = 1.0f) {
         init_box(model2world, size, material_box, mass_box);
       }
 
-      /// Box3D constructor, takes node
+      /// Box3D constructor, takes node.
       Box3D(scene_node *node, vec3 half_extents, material *material, float mass_box = 1.0f) {
         // assign private data
         modelToWorld = node->access_nodeToParent();
         init_box(modelToWorld, half_extents, material, mass_box);
       }
 
-      /// Box3D destructor
+      /// Box3D destructor.
       ~Box3D(){
       }
 
-      /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene
+      /// init function, mass defaults to 1.0 to ensure dynamic behavior within the scene.
       void init_box(mat4t model2world, vec3 size, material *material_box, float mass_box = 1.0f) {
         init(model2world, material_box, mass_box);
         halfExtents = size;
@@ -53,21 +53,7 @@ namespace octet {
         node = new scene_node(modelToWorld, atom_);
       }
 
-      /// only adds the mesh to the scene no rigidbody
-      void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, bool is_visible = true, bool make_child = true) {
-        sceneNodes.push_back(node);
-        if (is_visible && colladaMesh == NULL) {
-          appScene->add_mesh_instance(new mesh_instance(node, meshBox, mat));
-        }
-        else if (is_visible && colladaMesh != NULL) {
-          appScene->add_mesh_instance(new mesh_instance(node, colladaMesh, mat));
-        }
-        if (make_child) {
-          appScene->add_child(node);
-        }
-      }
-
-      /// Adds the mesh and rigidbody of the box to the scene
+      /// Adds the mesh and rigidbody of the box to the scene.
       void add_to_scene(dynarray<scene_node*> &sceneNodes, ref<visual_scene> &appScene, btDiscreteDynamicsWorld &btWorld,
         dynarray<btRigidBody*> &rigidBodies, bool is_visible = true, bool make_child = true) {
         btWorld.addRigidBody(rigidbody);
@@ -85,7 +71,7 @@ namespace octet {
         }
       }
 
-      /// returns the size of the Object3D
+      /// returns the size of the Object3D.
       vec3 getExtents() {
         return halfExtents;
       }

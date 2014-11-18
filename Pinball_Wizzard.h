@@ -5,19 +5,6 @@
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
 
-/*
-game logic:
--game comes on
--presented with controls
---user elects to start game (xbox)
----user reaches a certain score
-----xpad controls are scrambled
----user drops ball
-----user has balls left
------user is allowed to reset pinball (xbox)
-----user doesnt have any balls left
------user is presented with score and logic goes to top
-*/
 
 #include "Object3D.h"
 #include "Box3D.h"
@@ -56,7 +43,7 @@ namespace octet {
       // SCORING
       float multiplier = 1.0f;
       float score = 0.0f;
-      float magnitudeScore = 100.0f;
+      float magnitudeScore = 500.0f;
       float score_scroll = 20.0f;
       float score_lamp = 50.0f;
       float score_launch = 100.0f;
@@ -125,9 +112,9 @@ namespace octet {
         delete dispatcher;
       }
 
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// app_init
-      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      /// this is called once OpenGL is initialized
+      /// this is called once OpenGL is initialized this sets up the game of Pinball Wizzard.
+      /// this also contains the implementation of the collada importer used to import the level design.
+      /// the collada importer lookup string must be changed for the addition or subtraction of any collada objects.
       void app_init() {
 
         // initialise the scene
@@ -478,7 +465,7 @@ namespace octet {
         // add the skybox sphere to the world no rigidbody
         modelToWorld.loadIdentity();
         modelToWorld.rotateX90();
-        material *skybox_mat = new material(new image("assets/Pinball_Wizzard/largeGalField.gif"));
+        material *skybox_mat = new material(new image("assets/Pinball_Wizzard/Galaxy.gif"));
         skybox_node = new scene_node(modelToWorld, atom_);
         mesh_sphere *skybox_mesh = new mesh_sphere(vec3(), 40.0f);
         nodes.push_back(skybox_node);
@@ -499,8 +486,8 @@ namespace octet {
         printf("Number of lights in the scene: %i", app_scene->get_num_light_instances());
       }
 
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// draw_world
-      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      /// This is called 30 times per second to draw the world.
+      /// this contains all of the runtime decisions that are to be made while the game is being played.
       void draw_world(int x, int y, int w, int h) {
         int vx, vy;
         vx = vy = 0;
@@ -526,7 +513,7 @@ namespace octet {
 
         if (score >= magnitudeScore) {
           controlsRandomise();
-          magnitudeScore *= 10.0f;
+          magnitudeScore += 500.0f;
           pinball.playSoundRandomise();
         }
 
@@ -648,13 +635,16 @@ namespace octet {
             pinball.reset();
             return;
           case END:
+            magnitudeScore = 500;
             currentGameState = INTRO;
+            controlFlipperL = L_Shoulder;
+            controlFlipperR = R_Shoulder;
             // pinball play sound
             for (unsigned int i = 0; i < lamp_pointers.size(); ++i){
               lamp_pointers[i]->resetMultipier();
             }
             score = 0.0f;
-            multiplier = 0.0f;
+            multiplier = 1.0f;
             currentBalls = BALLS;
             return;
           case DROP:
@@ -677,7 +667,7 @@ namespace octet {
         // clear and update text
         if (currentGameState == PLAY || currentGameState == DROP || currentGameState == END) {
           righttext->clear();
-          righttext->format("SCORE: %8.2f\n" "MULITPLIER: %4.2f\n" "Balls Left: %i\n", score, multiplier, currentBalls);
+          righttext->format("SCORE: %8.2f\n" "TIME BONUS: %4.2f\n" "Balls Left: %i\n", score, multiplier, currentBalls);
         }
         else {
           righttext->clear();
